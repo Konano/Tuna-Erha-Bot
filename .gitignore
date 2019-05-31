@@ -1,0 +1,4 @@
+config.ini
+data
+__pycache__
+test*
