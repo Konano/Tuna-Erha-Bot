@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @source: Konano
 # @Date:   2019-05-28 14:12:29
-# @Last Modified by:   NanoApe
-# @Last Modified time: 2019-05-31 21:21:42
+# @Last Modified by:   Konano
+# @Last Modified time: 2019-06-01 01:12:41
 
 import logging
 
@@ -87,11 +87,13 @@ def detect(bot, job):
 
     messages = []
 
-    category_list = ['academic', '7days', 'business', 'poster', 'research']
-    for category in category_list:
-        messages += crawler.detect(config['URL'][category])
-
-    messages += crawler.detectBoard(config['URL']['board'])
+    try:
+        category_list = ['academic', '7days', 'business', 'poster', 'research']
+        for category in category_list:
+            messages += crawler.detect(config['URL'][category])
+        messages += crawler.detectBoard(config['URL']['board'])
+    except:
+        return
 
     try:
         with open('data/postinfo.json', 'r') as file:
@@ -102,19 +104,23 @@ def detect(bot, job):
     newMessages = []
 
     for each in messages:
-        if each['source'] not in mute_list:
-            each['title'] = each['title'].replace('[','(').replace(']',')')
-            if each['url'][0] == '/':
-                each['url'] = config['URL']['postinfo'] + each['url']
-            if each not in lastMessages:
-                newMessages.append(each)
+        each['title'] = each['title'].replace('[','(').replace(']',')')
+        if each['url'][0] == '/':
+            each['url'] = config['URL']['postinfo'] + each['url']
+
+    for each in messages:
+        if each['source'] not in mute_list and each not in lastMessages:
+            newMessages.append(each)
 
     if newMessages != []:
         logging.info('Detected new messages: ' + str(len(newMessages)))
-        for each in newMessages:
-            bot.send_message(chat_id=group,
-                             text='Info %s\n[%s](%s)' % (each['source'], each['title'], each['url']),
-                             parse_mode='Markdown')
+        if len(newMessages) < 10:
+            for each in newMessages:
+                bot.send_message(chat_id=group,
+                                 text='Info %s\n[%s](%s)' % (each['source'], each['title'], each['url']),
+                                 parse_mode='Markdown')
+        else:
+            bot.send_message(chat_id=group,text='出 Bug 了！')
     else:
         logging.info('Detected no new messages')
 
