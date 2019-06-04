@@ -2,7 +2,7 @@
 # @source: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-01 01:12:41
+# @Last Modified time: 2019-06-05 01:38:05
 
 import logging
 
@@ -143,6 +143,18 @@ def setid(bot, update):
     config['BOT']['group'] = str(group)
     update_config()
 
+def mute_show(bot, update):
+
+    if update.message.chat_id != owner and update.message.chat_id != group:
+        return
+    logging.info('\\mute_list')
+
+    text = 'Muted list:'
+    for each in mute_list:
+        text += '\n' + each
+
+    bot.send_message(update.message.chat_id, text)
+
 
 def main():
 
@@ -152,6 +164,7 @@ def main():
 
     dp.add_handler(CommandHandler('mute', mute, pass_args=True))
     dp.add_handler(CommandHandler('unmute', unmute, pass_args=True))
+    dp.add_handler(CommandHandler('mute_list', mute_show))
     dp.add_handler(CommandHandler('setid', setid))
 
     init(updater.job_queue)
