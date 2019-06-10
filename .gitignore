@@ -2,3 +2,8 @@ config.ini
 data
 __pycache__
 test*
+*.log
+build
+dist
+main.spec
+main.exe

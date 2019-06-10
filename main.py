@@ -4,19 +4,20 @@
 # @Last Modified by:   Konano
 # @Last Modified time: 2019-06-05 01:38:05
 
-import logging
-
-# Enable logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 import configparser
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 owner = config['BOT'].getint('owner')
 group = config['BOT'].getint('group')
+
+import logging
+
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO,
+					filename=config['BOT']['log'])
+logger = logging.getLogger(__name__)
 
 running = False
 
