@@ -5,5 +5,5 @@ test*
 *.log
 build
 dist
-main.spec
-main.exe
+*.spec
+*.exe
