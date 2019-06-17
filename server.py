@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-17 15:56:29
+# @Last Modified time: 2019-06-17 16:38:32
 
 import time
 from socket import *
@@ -152,7 +152,7 @@ def connectSocket():
                 raise
             lock.acquire()
             global newMessages, info_UPDATE
-            newMessages   = json.loads(msg[1:])
+            newMessages   = json.loads(msg)
             info_UPDATE   = True
             lock.release()
 
