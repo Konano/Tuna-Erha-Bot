@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-17 15:49:42
+# @Last Modified time: 2019-06-17 22:29:44
 
 import crawler
 import json
@@ -78,7 +78,11 @@ def main():
 
     while True:
         try:
-            clientSocket = socket(AF_INET,SOCK_STREAM)
+            clientSocket = socket(AF_INET, SOCK_STREAM)
+            clientSocket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
+            clientSocket.setsockopt(SOL_TCP, TCP_KEEPIDLE, 10)
+            clientSocket.setsockopt(SOL_TCP, TCP_KEEPINTVL, 6)
+            clientSocket.setsockopt(SOL_TCP, TCP_KEEPCNT, 20)
             clientSocket.connect((config['CLIENT']['ip'], config['CLIENT'].getint('port')))
             logging.info('Connect establish!')
         except:
