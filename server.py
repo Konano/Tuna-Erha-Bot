@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-17 17:21:31
+# @Last Modified time: 2019-06-17 17:27:11
 
 import time
 from socket import *
@@ -65,6 +65,8 @@ def info(bot, job):
                 bot.send_message(chat_id=group,
                                  text='Info %s\n[%s](%s)' % (each['source'], each['title'], each['url']),
                                  parse_mode='Markdown')
+    except:
+        pass
 
     lock.release()
 
@@ -154,6 +156,8 @@ def connectSocket():
                 global newMessages, info_UPDATE
                 newMessages   = json.loads(msg)
                 info_UPDATE   = True
+            except:
+                pass
             lock.release()
 
         except:
