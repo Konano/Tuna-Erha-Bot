@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-17 16:38:32
+# @Last Modified time: 2019-06-17 17:08:21
 
 import time
 from socket import *
@@ -56,7 +56,7 @@ def info(bot, job):
 
     lock.acquire()
 
-    newMessages = [each for each in newMessages if each['author'] not in mute_list]
+    newMessages = [each for each in newMessages if each['source'] not in mute_list]
 
     if newMessages == []:
         return
@@ -64,7 +64,7 @@ def info(bot, job):
     logging.info('Detected new messages: ' + str(len(newMessages)))
     for each in newMessages:
         bot.send_message(chat_id=group,
-                         text='Info %s\n[%s](%s)' % (each['author'], each['title'], each['url']),
+                         text='Info %s\n[%s](%s)' % (each['source'], each['title'], each['url']),
                          parse_mode='Markdown')
 
     lock.release()
