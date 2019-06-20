@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-17 22:29:44
+# @Last Modified time: 2019-06-20 11:29:14
 
 import crawler
 import json
@@ -55,7 +55,8 @@ def detect():
             if each not in lastMessages:
                 newMessages.append(each)
 
-        logging.info('Messages: %d, New: %d'%(len(messages),len(newMessages)))
+        if len(newMessages) > 0:
+            logging.info('Messages: %d, New: %d'%(len(messages),len(newMessages)))
 
         if len(newMessages) > 0 and len(newMessages) < 10:
             try:
