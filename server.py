@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 15:01:34
+# @Last Modified time: 2019-06-20 15:36:14
 
 import time
 from socket import *
@@ -154,19 +154,19 @@ def connectSocket():
     while True:
         try:
             try:
-                serverSocket.settimeout(60)
+                serverSocket.settimeout(300)
                 msg = serverSocket.recv(65536).decode('utf8')
             except timeout:
                 serverSocket.send('T'.encode('utf8'))
                 try:
-                    serverSocket.settimeout(5)
+                    serverSocket.settimeout(3)
                     serverSocket.recv(8)
                 except timeout:
                     raise
                 else:
                     TESTSUC += 1
-                    if TESTSUC % 60 == 0:
-                        logging.info('TESTSUC * 60')
+                    if TESTSUC % 10 == 0:
+                        logging.info('TESTSUC * 10')
                     continue
 
             logging.info(msg)
