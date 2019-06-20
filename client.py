@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 15:03:35
+# @Last Modified time: 2019-06-20 15:17:44
 
 import crawler
 import json
@@ -23,19 +23,47 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d 
                     filename=config['CLIENT']['logfile'])
 logger = logging.getLogger(__name__)
 
+SENDSUC = False
 def sendMsg(msg):
+    global SENDSUC
+    SENDSUC = False
+
     clientSocket.send(msg.encode('utf8'))
-    clientSocket.settimeout(5)
-    try:
-        clientSocket.recv(8)
-    except:
+
+    cnt = 5
+    while cnt > 0 and SENDSUC == False:
+        cnt -= 1
+        time.sleep(1)
+
+    if SENDSUC == False:
         raise
     else:
         logging.info('SENDSUC')
 
+def recvMsg(clientSocket):
+
+    clientSocket.settimeout(5)
+
+    global running, SENDSUC
+    while running:
+        try:
+            try:
+                msg = clientSocket.recv(512).decode('utf8')
+            except timeout:
+                continue
+
+            if msg[0] == 'T':
+                clientSocket.send('T'.encode('utf8'))
+            elif msg[0] == 'S':
+                SENDSUC = True
+        except:
+            logging.exception('Connect Error')
+            running = False
+
 def detect():
 
-    while True:
+    global running
+    while running:
 
         messages = []
         try:
@@ -73,6 +101,7 @@ def detect():
                 sendMsg(json.dumps(newMessages))
             except:
                 logging.exception('Connect Error')
+                running = False
                 return
 
         if abs(len(messages)-len(lastMessages)) < 10:
@@ -101,7 +130,13 @@ def main():
             time.sleep(60)
             continue
 
-        detect()
+        running = True
+        tr = Thread(target=recvMsg,args=(clientSocket,))
+        dt = Thread(target=detect)
+        tr.start()
+        dt.start()
+        tr.join()
+        dt.join()
         clientSocket.close()
 
 
