@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 14:37:56
+# @Last Modified time: 2019-06-20 14:44:17
 
 import time
 from socket import *
@@ -135,7 +135,6 @@ def mute_show(bot, update):
     bot.send_message(update.message.chat_id, text)
 
 TESTSUC = 0
-
 def connectSocket():
 
     mainSocket = socket(AF_INET,SOCK_STREAM)
@@ -151,6 +150,7 @@ def connectSocket():
     serverSocket.setsockopt(SOL_TCP, TCP_KEEPCNT, 20)
     logging.info('Connect establish!')
 
+    global TESTSUC
     while True:
         try:
             try:
