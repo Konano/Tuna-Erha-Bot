@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 14:35:48
+# @Last Modified time: 2019-06-20 14:39:49
 
 import crawler
 import json
@@ -33,7 +33,7 @@ def sendMsg(msg):
 
     cnt = 100
     while cnt > 0 and SENDSUC == False:
-        cnt--
+        cnt -= 1
         sleep(0.1)
 
     if SENDSUC == False:
