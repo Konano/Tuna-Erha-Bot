@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 11:36:42
+# @Last Modified time: 2019-06-20 14:37:56
 
 import time
 from socket import *
@@ -134,13 +134,11 @@ def mute_show(bot, update):
 
     bot.send_message(update.message.chat_id, text)
 
+TESTSUC = 0
+
 def connectSocket():
 
     mainSocket = socket(AF_INET,SOCK_STREAM)
-    mainSocket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
-    mainSocket.setsockopt(SOL_TCP, TCP_KEEPIDLE, 10)
-    mainSocket.setsockopt(SOL_TCP, TCP_KEEPINTVL, 6)
-    mainSocket.setsockopt(SOL_TCP, TCP_KEEPCNT, 20)
     mainSocket.bind((config['SERVER']['ip'], config['SERVER'].getint('port')))
     mainSocket.listen(1)
 
@@ -155,8 +153,23 @@ def connectSocket():
 
     while True:
         try:
-            msg = serverSocket.recv(65536).decode('utf8')
-            logging.info('Received: %s'%msg)
+            try:
+                serverSocket.settimeout(60)
+                msg = serverSocket.recv(65536).decode('utf8')
+            except timeout:
+                serverSocket.send('T'.encode('utf8'))
+                try:
+                    serverSocket.settimeout(5)
+                    msg = serverSocket.recv(65536).decode('utf8')
+                except timeout:
+                    raise
+                else:
+                    TESTSUC += 1
+                    if TESTSUC % 60 == 0:
+                        logging.info('TESTSUC * 60')
+                    continue
+
+            logging.info(msg)
             if msg == '':
                 raise
             lock.acquire()
@@ -167,9 +180,10 @@ def connectSocket():
             except:
                 pass
             lock.release()
+            serverSocket.send('S'.encode('utf8'))
 
         except:
-            logging.exception('ConnectionError')
+            logging.exception('Connect Error')
             serverSocket.close()
             logging.info('Wait for connection...')
             serverSocket,destAdr = mainSocket.accept()

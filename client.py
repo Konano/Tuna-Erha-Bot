@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 11:29:14
+# @Last Modified time: 2019-06-20 14:35:48
 
 import crawler
 import json
@@ -24,18 +24,34 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d 
 logger = logging.getLogger(__name__)
 
 
+SENDSUC = False
+def sendMsg(msg):
+    global SENDSUC
+    SENDSUC = False
+
+    clientSocket.send(msg.encode('utf8'))
+
+    cnt = 100
+    while cnt > 0 and SENDSUC == False:
+        cnt--
+        sleep(0.1)
+
+    if SENDSUC == False:
+        raise
+
 def detect():
 
     while True:
 
         messages = []
-
         try:
             category_list = ['academic', '7days', 'business', 'poster', 'research']
             for category in category_list:
                 messages += crawler.detect(config['URL'][category])
             messages += crawler.detectBoard(config['URL']['board'])
         except:
+            logging.info('Network Error')
+            time.sleep(60)
             continue
 
         for each in messages:
@@ -60,9 +76,9 @@ def detect():
 
         if len(newMessages) > 0 and len(newMessages) < 10:
             try:
-                clientSocket.send(json.dumps(newMessages).encode('utf8'))
+                sendMsg(json.dumps(newMessages))
             except:
-                logging.exception('ConnectionError')
+                logging.exception('Connect Error')
                 return
 
         if abs(len(messages)-len(lastMessages)) < 10:
@@ -87,7 +103,7 @@ def main():
             clientSocket.connect((config['CLIENT']['ip'], config['CLIENT'].getint('port')))
             logging.info('Connect establish!')
         except:
-            logging.exception('ConnectionError')
+            logging.exception('Connect Error')
             time.sleep(60)
             continue
 
