@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-17 17:27:11
+# @Last Modified time: 2019-06-20 11:36:42
 
 import time
 from socket import *
@@ -137,12 +137,20 @@ def mute_show(bot, update):
 def connectSocket():
 
     mainSocket = socket(AF_INET,SOCK_STREAM)
+    mainSocket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
+    mainSocket.setsockopt(SOL_TCP, TCP_KEEPIDLE, 10)
+    mainSocket.setsockopt(SOL_TCP, TCP_KEEPINTVL, 6)
+    mainSocket.setsockopt(SOL_TCP, TCP_KEEPCNT, 20)
     mainSocket.bind((config['SERVER']['ip'], config['SERVER'].getint('port')))
     mainSocket.listen(1)
 
     global serverSocket
     logging.info('Wait for connection...')
     serverSocket,destAdr = mainSocket.accept()
+    serverSocket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
+    serverSocket.setsockopt(SOL_TCP, TCP_KEEPIDLE, 10)
+    serverSocket.setsockopt(SOL_TCP, TCP_KEEPINTVL, 6)
+    serverSocket.setsockopt(SOL_TCP, TCP_KEEPCNT, 20)
     logging.info('Connect establish!')
 
     while True:
@@ -165,6 +173,10 @@ def connectSocket():
             serverSocket.close()
             logging.info('Wait for connection...')
             serverSocket,destAdr = mainSocket.accept()
+            serverSocket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
+            serverSocket.setsockopt(SOL_TCP, TCP_KEEPIDLE, 10)
+            serverSocket.setsockopt(SOL_TCP, TCP_KEEPINTVL, 6)
+            serverSocket.setsockopt(SOL_TCP, TCP_KEEPCNT, 20)
             logging.info('Connect establish!')
             continue
 
@@ -197,4 +209,4 @@ def main():
 if __name__ == '__main__':
     connect = Thread(target=connectSocket)
     connect.start()
-    main()
+    # main()
