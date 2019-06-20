@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 14:44:17
+# @Last Modified time: 2019-06-20 15:01:34
 
 import time
 from socket import *
@@ -160,7 +160,7 @@ def connectSocket():
                 serverSocket.send('T'.encode('utf8'))
                 try:
                     serverSocket.settimeout(5)
-                    msg = serverSocket.recv(65536).decode('utf8')
+                    serverSocket.recv(8)
                 except timeout:
                     raise
                 else:

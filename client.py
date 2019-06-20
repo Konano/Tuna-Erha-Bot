@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 14:39:49
+# @Last Modified time: 2019-06-20 15:03:35
 
 import crawler
 import json
@@ -23,21 +23,15 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d 
                     filename=config['CLIENT']['logfile'])
 logger = logging.getLogger(__name__)
 
-
-SENDSUC = False
 def sendMsg(msg):
-    global SENDSUC
-    SENDSUC = False
-
     clientSocket.send(msg.encode('utf8'))
-
-    cnt = 100
-    while cnt > 0 and SENDSUC == False:
-        cnt -= 1
-        sleep(0.1)
-
-    if SENDSUC == False:
+    clientSocket.settimeout(5)
+    try:
+        clientSocket.recv(8)
+    except:
         raise
+    else:
+        logging.info('SENDSUC')
 
 def detect():
 
