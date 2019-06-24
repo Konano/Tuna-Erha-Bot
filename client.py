@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 15:17:44
+# @Last Modified time: 2019-06-24 14:39:21
 
 import crawler
 import json
@@ -96,19 +96,30 @@ def detect():
         if len(newMessages) > 0:
             logging.info('Messages: %d, New: %d'%(len(messages),len(newMessages)))
 
-        if len(newMessages) > 0 and len(newMessages) < 10:
+        if len(newMessages) > 0 and len(newMessages) <= 3:
             try:
                 sendMsg(json.dumps(newMessages))
             except:
                 logging.exception('Connect Error')
                 running = False
                 return
+        elif len(newMessages) > 3:
+            try:
+                sendMsg(json.dumps(newMessages[:3]))
+            except:
+                logging.exception('Connect Error')
+                running = False
+                return
+            for each in newMessages[3:]:
+                messages.remove(each)
 
-        if abs(len(messages)-len(lastMessages)) < 10:
-            with open('data/postinfo.json', 'w') as file:
-                json.dump(messages, file)
-        else:
-            logging.warnning('not Save')
+        if abs(len(messages)-len(lastMessages)) > 10:
+            logging.warning('backup lastMessages')
+            with open('data/postinfo_backup_%d.json'%(int(time.time())), 'w') as file:
+                json.dump(lastMessages, file)
+
+        with open('data/postinfo.json', 'w') as file:
+            json.dump(messages, file)
 
         time.sleep(60)
 
