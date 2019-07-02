@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-24 14:39:21
+# @Last Modified time: 2019-06-25 13:57:05
 
 import crawler
 import json
@@ -63,6 +63,13 @@ def recvMsg(clientSocket):
 def detect():
 
     global running
+
+    try:
+        with open('data/postinfo.json', 'r') as file:
+            lastMessages = json.load(file)
+    except:
+        lastMessages = []
+
     while running:
 
         messages = []
@@ -81,11 +88,8 @@ def detect():
             if each['url'][0] == '/':
                 each['url'] = config['URL']['postinfo'] + each['url']
 
-        try:
-            with open('data/postinfo.json', 'r') as file:
-                lastMessages = json.load(file)
-        except:
-            lastMessages = []
+        if len(messages) == 0:
+            logging.warning('empty messages')
 
         newMessages = []
 
@@ -96,30 +100,23 @@ def detect():
         if len(newMessages) > 0:
             logging.info('Messages: %d, New: %d'%(len(messages),len(newMessages)))
 
-        if len(newMessages) > 0 and len(newMessages) <= 3:
+        if len(newMessages) > 3:
+            newMessages = newMessages[:3]
+
+        if newMessages != []:
+
             try:
                 sendMsg(json.dumps(newMessages))
             except:
                 logging.exception('Connect Error')
                 running = False
                 return
-        elif len(newMessages) > 3:
-            try:
-                sendMsg(json.dumps(newMessages[:3]))
-            except:
-                logging.exception('Connect Error')
-                running = False
-                return
-            for each in newMessages[3:]:
-                messages.remove(each)
 
-        if abs(len(messages)-len(lastMessages)) > 10:
-            logging.warning('backup lastMessages')
-            with open('data/postinfo_backup_%d.json'%(int(time.time())), 'w') as file:
+            for each in newMessages:
+                lastMessages.append(each)
+
+            with open('data/postinfo.json', 'w') as file:
                 json.dump(lastMessages, file)
-
-        with open('data/postinfo.json', 'w') as file:
-            json.dump(messages, file)
 
         time.sleep(60)
 

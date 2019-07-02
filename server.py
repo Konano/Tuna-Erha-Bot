@@ -223,4 +223,4 @@ def main():
 if __name__ == '__main__':
     connect = Thread(target=connectSocket)
     connect.start()
-    # main()
+    main()
