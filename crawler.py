@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @source: NanoApe
 # @Date:   2019-05-24 22:35:35
-# @Last Modified by:   NanoApe
-# @Last Modified time: 2019-05-31 20:47:28
+# @Last Modified by:   Konano
+# @Last Modified time: 2019-08-10 11:05:17
 
 import requests
 from bs4 import BeautifulSoup
@@ -54,4 +54,26 @@ def libseat(URL):
         result.append({'name'  : each.select('td')[0].get_text(),
                        'used'  : each.select('td')[1].get_text(),
                        'remain': each.select('td')[2].get_text()})
+    return result
+
+stationList = [2, 3, 4, 5, 7]
+
+def weather(URL):
+    html = requests.get(URL).content
+    bs = BeautifulSoup(html, 'lxml', from_encoding='utf-8')
+
+    result = []
+
+    for station in bs.select('table'):
+        if int(station.select('p')[0].get_text().split(' ')[0][0]) in stationList:
+            result.append({'ID'              : station.select('p')[0].get_text().split(' ')[0][0],
+                           'location'        : station.select('p')[0].get_text().split(' ')[1],
+                           'date'            : station.select('p')[0].get_text().split(' ')[3],
+                           'time'            : station.select('p')[0].get_text().split(' ')[4],
+                           'temperature'     : station.select('tr')[1].select('td')[1].get_text(),
+                           'wind_direction'  : station.select('tr')[1].select('td')[3].get_text(),
+                           'humidity'        : station.select('tr')[2].select('td')[1].get_text(),
+                           'wind_speed'      : station.select('tr')[2].select('td')[3].get_text(),
+                           'rainfall_10mins' : station.select('tr')[3].select('td')[1].get_text(),
+                           'hPa'             : station.select('tr')[3].select('td')[3].get_text()})
     return result

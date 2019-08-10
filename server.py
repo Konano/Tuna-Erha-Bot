@@ -2,12 +2,13 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-20 15:36:14
+# @Last Modified time: 2019-08-10 11:10:36
 
 import time
 from socket import *
 from threading import Thread, Lock
 
+connectTimeLimit = 10
 
 import configparser
 
@@ -134,6 +135,47 @@ def mute_show(bot, update):
 
     bot.send_message(update.message.chat_id, text)
 
+w_REQUEST = False
+w_DATA = {}
+
+def weather(bot, update):
+
+    if update.message.chat_id != owner and update.message.chat_id != group:
+        return
+    logging.info('\\weather')
+
+    try:
+        global serverSocket
+        serverSocket.send('W'.encode('utf8'))
+        logging.info('Send request')
+    except:
+        logging.exception('Connect Error')
+        return
+
+    try:
+        global w_REQUEST
+        w_REQUEST = True
+        cnt = 10 * connectTimeLimit
+        while w_REQUEST:
+            time.sleep(0.1)
+            cnt -= 1
+            if cnt <= 0:
+                raise
+    except:
+        bot.send_message(owner, 'Time out: %ds'%connectTimeLimit)
+        logging.warning('Don\'t receive any data in %ds'%connectTimeLimit)
+        return
+
+    logging.info('Received data')
+    text = ''
+    for station in w_DATA:
+        if text != '':
+            text += '\n'
+        text += station['location'] + '\n'
+        text += station['date'] + ' ' + station['time'] + '\n'
+        text += '{}°C  {}%  {}m/s  {}mm\n'.format(station['temperature'], station['humidity'], station['wind_speed'], station['rainfall_10mins'])
+    bot.send_message(owner, text)
+
 TESTSUC = 0
 def connectSocket():
 
@@ -172,15 +214,21 @@ def connectSocket():
             logging.info(msg)
             if msg == '':
                 raise
-            lock.acquire()
-            try:
-                global newMessages, info_UPDATE
-                newMessages   = json.loads(msg)
-                info_UPDATE   = True
-            except:
-                pass
-            lock.release()
-            serverSocket.send('S'.encode('utf8'))
+            if msg[0] == 'W':     # weather
+                global w_REQUEST, w_DATA
+                w_DATA = json.loads(msg[1:])
+                w_REQUEST = False
+                serverSocket.send('S'.encode('utf8'))
+            else:
+                lock.acquire()
+                try:
+                    global newMessages, info_UPDATE
+                    newMessages   = json.loads(msg)
+                    info_UPDATE   = True
+                except:
+                    pass
+                lock.release()
+                serverSocket.send('S'.encode('utf8'))
 
         except:
             logging.exception('Connect Error')
@@ -211,6 +259,7 @@ def main():
     dp.add_handler(CommandHandler('unmute', unmute, pass_args=True))
     dp.add_handler(CommandHandler('mute_list', mute_show))
     dp.add_handler(CommandHandler('setid', setid))
+    dp.add_handler(CommandHandler('weather', weather))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
 

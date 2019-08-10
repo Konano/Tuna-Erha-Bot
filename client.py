@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-06-25 13:57:05
+# @Last Modified time: 2019-08-10 11:04:24
 
 import crawler
 import json
@@ -56,6 +56,10 @@ def recvMsg(clientSocket):
                 clientSocket.send('T'.encode('utf8'))
             elif msg[0] == 'S':
                 SENDSUC = True
+            elif msg[0] == 'W':
+                logging.info(msg)
+                weather = Thread(target=sendMsg,args=('W'+json.dumps(crawler.weather(config['URL']['weather'])),))
+                weather.start()
         except:
             logging.exception('Connect Error')
             running = False
