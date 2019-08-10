@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-10 11:10:36
+# @Last Modified time: 2019-08-10 11:44:38
 
 import time
 from socket import *
@@ -162,7 +162,7 @@ def weather(bot, update):
             if cnt <= 0:
                 raise
     except:
-        bot.send_message(owner, 'Time out: %ds'%connectTimeLimit)
+        bot.send_message(update.message.chat_id, 'Time out: %ds'%connectTimeLimit)
         logging.warning('Don\'t receive any data in %ds'%connectTimeLimit)
         return
 
@@ -174,7 +174,7 @@ def weather(bot, update):
         text += station['location'] + '\n'
         text += station['date'] + ' ' + station['time'] + '\n'
         text += '{}°C  {}%  {}m/s  {}mm\n'.format(station['temperature'], station['humidity'], station['wind_speed'], station['rainfall_10mins'])
-    bot.send_message(owner, text)
+    bot.send_message(update.message.chat_id, text)
 
 TESTSUC = 0
 def connectSocket():
