@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-10 11:44:38
+# @Last Modified time: 2019-08-10 11:49:07
 
 import time
 from socket import *
@@ -140,8 +140,6 @@ w_DATA = {}
 
 def weather(bot, update):
 
-    if update.message.chat_id != owner and update.message.chat_id != group:
-        return
     logging.info('\\weather')
 
     try:
