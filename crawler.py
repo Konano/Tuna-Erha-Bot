@@ -2,7 +2,7 @@
 # @source: NanoApe
 # @Date:   2019-05-24 22:35:35
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-10 11:05:17
+# @Last Modified time: 2019-08-12 15:55:39
 
 import requests
 from bs4 import BeautifulSoup
@@ -77,3 +77,15 @@ def weather(URL):
                            'rainfall_10mins' : station.select('tr')[3].select('td')[1].get_text(),
                            'hPa'             : station.select('tr')[3].select('td')[3].get_text()})
     return result
+
+def rainfall(URL):
+    html = requests.get(URL).content
+    bs = BeautifulSoup(html, 'lxml', from_encoding='utf-8')
+
+    maxRainfall = 0.0
+
+    for station in bs.select('table'):
+        if int(station.select('p')[0].get_text().split(' ')[0][0]) in stationList:
+            maxRainfall = max(maxRainfall, float(station.select('tr')[3].select('td')[1].get_text()))
+
+    return maxRainfall

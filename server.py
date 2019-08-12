@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-10 11:49:07
+# @Last Modified time: 2019-08-12 16:04:35
 
 import time
 from socket import *
@@ -216,6 +216,15 @@ def connectSocket():
                 global w_REQUEST, w_DATA
                 w_DATA = json.loads(msg[1:])
                 w_REQUEST = False
+                serverSocket.send('S'.encode('utf8'))
+            elif msg[0] == 'R':
+                try:
+                    if msg[1] == 'S':
+                        bot.send_message(chat_id=channel, text='下雨了。')
+                    elif msg[1] == 'E':
+                        bot.send_message(chat_id=channel, text='雨停了。')
+                except:
+                    pass
                 serverSocket.send('S'.encode('utf8'))
             else:
                 lock.acquire()

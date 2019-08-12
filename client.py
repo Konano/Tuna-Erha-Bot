@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-10 11:04:24
+# @Last Modified time: 2019-08-12 16:06:21
 
 import crawler
 import json
@@ -83,7 +83,7 @@ def detect():
                 messages += crawler.detect(config['URL'][category])
             messages += crawler.detectBoard(config['URL']['board'])
         except:
-            logging.info('Network Error')
+            logging.warning('Network Error')
             time.sleep(60)
             continue
 
@@ -124,6 +124,43 @@ def detect():
 
         time.sleep(60)
 
+def rain():
+
+    global running
+
+    lastRainfall = 0.0
+
+    while running:
+
+        try:
+            rainfall = crawler.rainfall(config['URL']['weather'])
+        except:
+            logging.warning('Network Error')
+            time.sleep(60)
+            continue
+
+        msg = ''
+        if lastRainfall == 0 and rainfall > 0:
+            msg = 'S'
+        if lastRainfall > 0 and rainfall == 0:
+            msg = 'E'
+
+        if rainfall > 0:
+            logging.info(f'Rainfall: {rainfall}')
+
+        if msg != '':
+
+            try:
+                sendMsg('R'+msg)
+            except:
+                logging.exception('Connect Error')
+                running = False
+                return
+
+        lastRainfall = rainfall
+
+        time.sleep(60)
+
 def main():
 
     global running, clientSocket
@@ -145,10 +182,13 @@ def main():
         running = True
         tr = Thread(target=recvMsg,args=(clientSocket,))
         dt = Thread(target=detect)
+        rn = Thread(target=rain)
         tr.start()
         dt.start()
+        rn.start()
         tr.join()
         dt.join()
+        rn.join()
         clientSocket.close()
 
 
