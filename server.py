@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
@@ -220,9 +220,9 @@ def connectSocket():
             elif msg[0] == 'R':
                 try:
                     if msg[1] == 'S':
-                        bot.send_message(chat_id=channel, text='下雨了。')
+                        bot.send_message(chat_id=group, text='下雨了。')
                     elif msg[1] == 'E':
-                        bot.send_message(chat_id=channel, text='雨停了。')
+                        bot.send_message(chat_id=group, text='雨停了。')
                 except:
                     pass
                 serverSocket.send('S'.encode('utf8'))
