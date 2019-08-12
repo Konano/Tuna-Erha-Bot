@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-12 16:04:35
+# @Last Modified time: 2019-08-12 17:04:30
 
 import time
 from socket import *
@@ -70,6 +70,25 @@ def info(bot, job):
         pass
 
     lock.release()
+
+rain_UPDATE = 0
+
+def rain(bot, job):
+
+    global rain_UPDATE
+
+    if rain_UPDATE == 0:
+        return
+
+    try:
+        if rain_UPDATE == +1:
+            bot.send_message(chat_id=group, text='下雨了。')
+        elif rain_UPDATE == -1:
+            bot.send_message(chat_id=group, text='雨停了。')
+    except:
+        pass
+
+    rain_UPDATE = 0
 
 def mute(bot, update, args):
 
@@ -218,13 +237,12 @@ def connectSocket():
                 w_REQUEST = False
                 serverSocket.send('S'.encode('utf8'))
             elif msg[0] == 'R':
-                try:
-                    if msg[1] == 'S':
-                        bot.send_message(chat_id=group, text='下雨了。')
-                    elif msg[1] == 'E':
-                        bot.send_message(chat_id=group, text='雨停了。')
-                except:
-                    pass
+                logging.info(msg)
+                global rain_UPDATE
+                if msg[1] == 'S':
+                    rain_UPDATE = +1
+                elif msg[1] == 'E':
+                    rain_UPDATE = -1
                 serverSocket.send('S'.encode('utf8'))
             else:
                 lock.acquire()
@@ -269,6 +287,7 @@ def main():
     dp.add_handler(CommandHandler('weather', weather))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
+    updater.job_queue.run_repeating(rain, interval=10, first=0, context=group)
 
     dp.add_error_handler(error)
 
