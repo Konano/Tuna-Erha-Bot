@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-13 02:47:59
+# @Last Modified time: 2019-08-13 03:00:53
 
 import time
 from socket import *
@@ -116,6 +116,8 @@ def forecast_rain(bot, job):
         logging.info('precipitation')
         logging.info(data['result']['hourly']['precipitation'])
         bot.send_message(chat_id=group, text=forecast_keypoint)
+    elif data['result']['hourly']['precipitation'][0]['datetime'][11:13] in ['06', '18']:
+        bot.send_message(chat_id=channel, text=forecast_keypoint)
     pre_status = status
 
 def mute(bot, update, args):
