@@ -2,7 +2,7 @@
 # @source: NanoApe
 # @Date:   2019-05-24 22:35:35
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-12 15:55:39
+# @Last Modified time: 2019-08-13 02:49:42
 
 import requests
 from bs4 import BeautifulSoup
@@ -89,3 +89,7 @@ def rainfall(URL):
             maxRainfall = max(maxRainfall, float(station.select('tr')[3].select('td')[1].get_text()))
 
     return maxRainfall
+
+def request(URL):
+
+    return requests.get(URL).content.decode('utf-8')

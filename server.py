@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-12 17:04:30
+# @Last Modified time: 2019-08-13 02:47:59
 
 import time
 from socket import *
@@ -89,6 +89,34 @@ def rain(bot, job):
         pass
 
     rain_UPDATE = 0
+
+forecast_keypoint = 'Nothing'
+pre_status = 0
+
+def forecast(bot, update):
+
+    bot.send_message(chat_id=group, text=forecast_keypoint)
+
+def forecast_rain(bot, job):
+
+    data = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/hourly?hourlysteps=4' \
+        .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
+
+    global forecast_keypoint
+    forecast_keypoint = data['result']['hourly']['description']
+
+    status = 0
+    for hour in data['result']['hourly']['precipitation']:
+        status = status * 2
+        if float(hour['value']) >= 0.03:
+            status = status + 1
+
+    global pre_status
+    if status != pre_status:
+        logging.info('precipitation')
+        logging.info(data['result']['hourly']['precipitation'])
+        bot.send_message(chat_id=group, text=forecast_keypoint)
+    pre_status = status
 
 def mute(bot, update, args):
 
@@ -285,9 +313,11 @@ def main():
     dp.add_handler(CommandHandler('mute_list', mute_show))
     dp.add_handler(CommandHandler('setid', setid))
     dp.add_handler(CommandHandler('weather', weather))
+    dp.add_handler(CommandHandler('forecast', forecast))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain, interval=10, first=0, context=group)
+    updater.job_queue.run_repeating(forecast_rain, interval=240, first=0, context=channel)
 
     dp.add_error_handler(error)
 
