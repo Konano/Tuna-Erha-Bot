@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-15 02:34:02
+# @Last Modified time: 2019-08-15 02:42:19
 
 import crawler
 import json
@@ -62,6 +62,7 @@ def recvMsg(clientSocket):
                 weather = Thread(target=sendMsg,args=('W'+json.dumps(crawler.weather(config['URL']['weather'])),))
                 weather.start()
             elif msg[0] == 'K':
+                logging.info('Killed')
                 os._exit(0)
         except:
             logging.exception('Connect Error')
