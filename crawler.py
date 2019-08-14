@@ -2,7 +2,7 @@
 # @source: NanoApe
 # @Date:   2019-05-24 22:35:35
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-13 02:49:42
+# @Last Modified time: 2019-08-15 02:34:24
 
 import requests
 from bs4 import BeautifulSoup
@@ -41,6 +41,23 @@ def detectBoard(URL):
                          'url'   : each.get('href')})
 
     return messages
+
+
+def detectLibrary(URL):
+
+    html = requests.get(URL).content
+    bs = BeautifulSoup(html, 'lxml', from_encoding='utf-8')
+    content = bs.select('table > tbody > tr > td > a')
+
+    messages = []
+
+    for each in content:
+        messages.append({'title' : each.get_text(),
+                         'source': '图书馆公告',
+                         'url'   : 'http://lib.tsinghua.edu.cn'+each.get('href')})
+
+    return messages
+
 
 
 def libseat(URL):

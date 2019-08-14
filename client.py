@@ -2,11 +2,12 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-12 16:06:21
+# @Last Modified time: 2019-08-15 02:34:02
 
 import crawler
 import json
 import time
+import os
 
 import configparser
 
@@ -60,6 +61,8 @@ def recvMsg(clientSocket):
                 logging.info(msg)
                 weather = Thread(target=sendMsg,args=('W'+json.dumps(crawler.weather(config['URL']['weather'])),))
                 weather.start()
+            elif msg[0] == 'K':
+                os._exit(0)
         except:
             logging.exception('Connect Error')
             running = False
@@ -82,6 +85,7 @@ def detect():
             for category in category_list:
                 messages += crawler.detect(config['URL'][category])
             messages += crawler.detectBoard(config['URL']['board'])
+            messages += crawler.detectLibrary(config['URL']['library'])
         except:
             logging.warning('Network Error')
             time.sleep(60)

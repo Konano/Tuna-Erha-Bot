@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-13 03:00:53
+# @Last Modified time: 2019-08-15 02:35:16
 
 import time
 from socket import *
@@ -301,6 +301,23 @@ def connectSocket():
     mainSocket.close()
 
 
+def killed(bot, update):
+
+    if update.message.chat_id != owner:
+        return
+    logging.info('\\kill')
+
+    try:
+        global serverSocket
+        serverSocket.send('K'.encode('utf8'))
+        logging.info('Send request')
+    except:
+        logging.exception('Connect Error')
+        return
+
+    bot.send_message(owner, 'Killed.')
+
+
 def main():
 
     if config['BOT'].getboolean('proxy'):
@@ -315,11 +332,12 @@ def main():
     dp.add_handler(CommandHandler('mute_list', mute_show))
     dp.add_handler(CommandHandler('setid', setid))
     dp.add_handler(CommandHandler('weather', weather))
-    dp.add_handler(CommandHandler('forecast', forecast))
+    # dp.add_handler(CommandHandler('forecast', forecast))
+    dp.add_handler(CommandHandler('kill', killed))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain, interval=10, first=0, context=group)
-    updater.job_queue.run_repeating(forecast_rain, interval=240, first=0, context=channel)
+    # updater.job_queue.run_repeating(forecast_rain, interval=240, first=0, context=channel)
 
     dp.add_error_handler(error)
 
