@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-16 00:52:17
+# @Last Modified time: 2019-08-16 01:46:17
 
 import time
 from socket import *
@@ -437,6 +437,19 @@ def killed(bot, update):
 
     bot.send_message(owner, 'Killed.')
 
+def time_hash(t):
+    return t.tm_hour % 12 - 6
+
+preTimeHash = time_hash(time.localtime())
+
+def forecast_daily(bot, job):
+
+    global preTimeHash
+    timeHash = time_hash(time.localtime())
+    if preTimeHash < 0 and timeHash == 0:
+        bot.send_message(chat_id=channel, text=caiyunData['result']['hourly']['description'])
+    preTimeHash = timeHash
+
 
 def main():
 
@@ -460,6 +473,7 @@ def main():
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(caiyun, interval=300, first=0, context=group)
+    updater.job_queue.run_repeating(forecast_daily, interval=10, first=0, context=channel)
 
     dp.add_error_handler(error)
 
