@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-15 02:35:16
+# @Last Modified time: 2019-08-15 23:38:56
 
 import time
 from socket import *
@@ -11,6 +11,7 @@ from threading import Thread, Lock
 connectTimeLimit = 10
 
 import configparser
+import crawler
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -41,7 +42,7 @@ import json
 
 with open('data/mute.json', 'r') as file:
     mute_list = json.load(file)
-logging.info(mute_list)
+# logging.info(mute_list)
 
 lock = Lock()
 newMessages = []
@@ -73,7 +74,7 @@ def info(bot, job):
 
 rain_UPDATE = 0
 
-def rain(bot, job):
+def rain_thu(bot, job):
 
     global rain_UPDATE
 
@@ -90,35 +91,63 @@ def rain(bot, job):
 
     rain_UPDATE = 0
 
-forecast_keypoint = 'Nothing'
-pre_status = 0
 
 def forecast(bot, update):
 
-    bot.send_message(chat_id=group, text=forecast_keypoint)
+    bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint'])
 
-def forecast_rain(bot, job):
+base_probability = 0.7
+rain_4h = False
+pre_start = pre_end = 0
 
-    data = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/hourly?hourlysteps=4' \
+def forecast_rain(bot):
+
+    probability_2h = caiyunData['result']['minutely']['probability']
+    probability_4h = caiyunData['result']['minutely']['probability_4h']
+    global rain_4h
+    if max(probability_4h) < base_probability:
+        rain_4h = False
+    elif max(probability_2h) < base_probability:
+        if rain_4h == False:
+            rain_4h = True
+            bot.send_message(chat_id=group, text='There will be precipitation in 4 hours.')
+    else:
+        precipitation = np.array(caiyunData['result']['minutely']['precipitation_2h'])
+        global pre_start, pre_end
+        rain_start = np.argmax(precipitation >= 0.03)
+        rain_end = np.argmax(precipitation < 0.03)
+        if (pre_start == 0  and rain_start > 0) or \
+           (pre_start >= 60 and rain_start < 60) or \
+           (pre_start >= 30 and rain_start < 30) or \
+           (pre_end == 0  and rain_end > 0) or \
+           (pre_end >= 60 and rain_end < 60) or \
+           (pre_end >= 30 and rain_end < 30):
+            bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint'])
+        pre_start = rain_start
+        pre_end = rain_end
+
+caiyunFailedCount = 0
+
+def caiyun(bot, job):
+
+    global caiyunData
+    caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/weather.json?lang=en_US' \
         .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
 
-    global forecast_keypoint
-    forecast_keypoint = data['result']['hourly']['description']
+    with open('data/caiyun.json', 'w') as file:
+        json.dump(caiyunData, file)
 
-    status = 0
-    for hour in data['result']['hourly']['precipitation']:
-        status = status * 2
-        if float(hour['value']) >= 0.03:
-            status = status + 1
+    if caiyunData['status'] != 'ok':
+        logging.warning('Failed to get CaiYun data.')
+        caiyunFailedCount += 1
+        if caiyunFailedCount == 5:
+            bot.send_message(chat_id=group, text='Failed to get CaiYun data 5 times.')
+        return
+    else:
+        caiyunFailedCount = 0
 
-    global pre_status
-    if status != pre_status:
-        logging.info('precipitation')
-        logging.info(data['result']['hourly']['precipitation'])
-        bot.send_message(chat_id=group, text=forecast_keypoint)
-    elif data['result']['hourly']['precipitation'][0]['datetime'][11:13] in ['06', '18']:
-        bot.send_message(chat_id=channel, text=forecast_keypoint)
-    pre_status = status
+    forecast_rain(bot)
+
 
 def mute(bot, update, args):
 
@@ -187,9 +216,9 @@ def mute_show(bot, update):
 w_REQUEST = False
 w_DATA = {}
 
-def weather(bot, update):
+def weather_thu(bot, update):
 
-    logging.info('\\weather')
+    logging.info('\\weather_thu')
 
     try:
         global serverSocket
@@ -224,6 +253,7 @@ def weather(bot, update):
     bot.send_message(update.message.chat_id, text)
 
 TESTSUC = 0
+
 def connectSocket():
 
     mainSocket = socket(AF_INET,SOCK_STREAM)
@@ -331,13 +361,13 @@ def main():
     dp.add_handler(CommandHandler('unmute', unmute, pass_args=True))
     dp.add_handler(CommandHandler('mute_list', mute_show))
     dp.add_handler(CommandHandler('setid', setid))
-    dp.add_handler(CommandHandler('weather', weather))
-    # dp.add_handler(CommandHandler('forecast', forecast))
+    dp.add_handler(CommandHandler('weather_thu', weather_thu))
     dp.add_handler(CommandHandler('kill', killed))
+    dp.add_handler(CommandHandler('forecast', forecast))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
-    updater.job_queue.run_repeating(rain, interval=10, first=0, context=group)
-    # updater.job_queue.run_repeating(forecast_rain, interval=240, first=0, context=channel)
+    updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
+    updater.job_queue.run_repeating(caiyun, interval=300, first=0, context=group)
 
     dp.add_error_handler(error)
 
