@@ -2,16 +2,18 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-16 01:46:55
+# @Last Modified time: 2019-08-16 02:05:08
 
 import time
 from socket import *
 from threading import Thread, Lock
+import crawler
+import random
+import math
 
 connectTimeLimit = 10
 
 import configparser
-import crawler
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -450,6 +452,18 @@ def forecast_daily(bot, job):
         bot.send_message(chat_id=group, text=caiyunData['result']['hourly']['description'])
     preTimeHash = timeHash
 
+emoji = '👮🚔🚨🚓'
+
+def callpolice(bot, update):
+
+    logging.info('\\callpolice {}'.format(update.message.chat_id))
+    random.seed(math.floor(time.time()))
+
+    text = ''
+    for i in range(random.randint(10, 100)):
+        text += emoji[random.randint(0, 3)]
+    bot.send_message(chat_id=update.message.chat_id, text=text)
+
 
 def main():
 
@@ -469,7 +483,7 @@ def main():
     dp.add_handler(CommandHandler('forecast', forecast))
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
     dp.add_handler(CommandHandler('weather', weather))
-    dp.add_handler(CommandHandler('police', weather))
+    dp.add_handler(CommandHandler('callpolice', callpolice))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
