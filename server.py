@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-15 23:52:47
+# @Last Modified time: 2019-08-15 23:56:07
 
 import time
 from socket import *
@@ -100,7 +100,7 @@ def forecast_hourly(bot, update):
 
     bot.send_message(chat_id=group, text=caiyunData['result']['hourly']['description'])
 
-base_probability = 0.7
+base_probability = 0.9
 rain_4h = False
 pre_start = pre_end = 0
 
