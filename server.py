@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-15 23:38:56
+# @Last Modified time: 2019-08-15 23:47:16
 
 import time
 from socket import *
@@ -95,6 +95,10 @@ def rain_thu(bot, job):
 def forecast(bot, update):
 
     bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint'])
+
+def forecast_daily(bot, update):
+
+    bot.send_message(chat_id=group, text=caiyunData['result']['hourly']['description'])
 
 base_probability = 0.7
 rain_4h = False
@@ -364,6 +368,7 @@ def main():
     dp.add_handler(CommandHandler('weather_thu', weather_thu))
     dp.add_handler(CommandHandler('kill', killed))
     dp.add_handler(CommandHandler('forecast', forecast))
+    dp.add_handler(CommandHandler('forecast_daily', forecast_daily))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
