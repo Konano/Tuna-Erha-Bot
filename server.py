@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-15 23:56:07
+# @Last Modified time: 2019-08-16 00:08:19
 
 import time
 from socket import *
@@ -94,11 +94,24 @@ def rain_thu(bot, job):
 
 def forecast(bot, update):
 
-    bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint'])
+    bot.send_message(chat_id=update.message.chat_id, text=caiyunData['result']['forecast_keypoint'])
 
 def forecast_hourly(bot, update):
 
-    bot.send_message(chat_id=group, text=caiyunData['result']['hourly']['description'])
+    bot.send_message(chat_id=update.message.chat_id, text=caiyunData['result']['hourly']['description'])
+
+def weather(bot, update):
+
+    text = ''
+    text += 'Temperature: {}\n'.format(caiyunData['result']['realtime']['temperature'])
+    text += 'Humidity: {}\n'.format(caiyunData['result']['realtime']['humidity'])
+    text += 'Wind Speed: {}\n'.format(caiyunData['result']['realtime']['wind']['speed'])
+    text += 'Precipitation: {}\n'.format(caiyunData['result']['realtime']['precipitation']['local']['intensity'])
+    text += 'Cloudrate: {}\n'.format(caiyunData['result']['realtime']['cloudrate'])
+    text += 'Skycon: {}\n'.format(caiyunData['result']['realtime']['skycon'])
+    text += 'AQI: {}\n'.format(caiyunData['result']['realtime']['aqi'])
+
+    bot.send_message(chat_id=update.message.chat_id, text=text)
 
 base_probability = 0.9
 rain_4h = False
@@ -369,6 +382,7 @@ def main():
     dp.add_handler(CommandHandler('kill', killed))
     dp.add_handler(CommandHandler('forecast', forecast))
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
+    dp.add_handler(CommandHandler('weather', weather))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
