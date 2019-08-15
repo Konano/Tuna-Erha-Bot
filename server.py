@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-16 00:08:19
+# @Last Modified time: 2019-08-16 00:52:17
 
 import time
 from socket import *
@@ -92,24 +92,97 @@ def rain_thu(bot, job):
     rain_UPDATE = 0
 
 
+def deal_precipitation(str):
+
+    intensity = float(str)
+
+    if intensity == 0:
+        return '无'
+    elif intensity < 0.03:
+        return '毛毛雨'
+    elif intensity < 0.25:
+        return '小雨'
+    elif intensity < 0.35:
+        return '中雨'
+    elif intensity < 0.48:
+        return '大雨'
+    else:
+        return '暴雨'
+
+def deal_skycon(str):
+
+    switch = {
+        'CLEAR_DAY': '晴',
+        'CLEAR_NIGHT': '晴',
+        'PARTLY_CLOUDY_DAY': '多云',
+        'PARTLY_CLOUDY_NIGHT': '多云',
+        'CLOUDY': '阴',
+        'WIND': '大风',
+        'HAZE': '雾霾',
+        'RAIN': '雨',
+        'SNOW': '雪'
+    }
+    try:
+        return switch[str]
+    except KeyError as e:
+        return 'ERROR'
+
+def level_aqi(str):
+
+    aqi = int(str)
+    if aqi <= 50: return '优'
+    elif aqi <= 100: return '良'
+    elif aqi <= 150: return '轻度污染'
+    elif aqi <= 200: return '中度污染'
+    elif aqi <= 300: return '重度污染'
+    else: return '严重污染'
+
+def level_windspeed(str):
+
+    speed = float(str)
+    if speed <= 0.2: return 'Lv 0'
+    elif speed <= 1.5: return 'Lv 1'
+    elif speed <= 3.3: return 'Lv 2'
+    elif speed <= 5.4: return 'Lv 3'
+    elif speed <= 7.9: return 'Lv 4'
+    elif speed <= 10.7: return 'Lv 5'
+    elif speed <= 13.8: return 'Lv 6'
+    elif speed <= 17.1: return 'Lv 7'
+    elif speed <= 20.7: return 'Lv 8'
+    elif speed <= 24.4: return 'Lv 9'
+    elif speed <= 28.4: return 'Lv 10'
+    elif speed <= 32.6: return 'Lv 11'
+    elif speed <= 36.9: return 'Lv 12'
+    elif speed <= 41.4: return 'Lv 13'
+    elif speed <= 46.1: return 'Lv 14'
+    elif speed <= 50.9: return 'Lv 15'
+    elif speed <= 56.0: return 'Lv 16'
+    elif speed <= 61.2: return 'Lv 17'
+    else: return 'Lv >17'
+
 def forecast(bot, update):
+
+    logging.info('\\forecast {}'.format(update.message.chat_id))
 
     bot.send_message(chat_id=update.message.chat_id, text=caiyunData['result']['forecast_keypoint'])
 
 def forecast_hourly(bot, update):
 
+    logging.info('\\forecast_hourly {}'.format(update.message.chat_id))
+
     bot.send_message(chat_id=update.message.chat_id, text=caiyunData['result']['hourly']['description'])
 
 def weather(bot, update):
 
-    text = ''
-    text += 'Temperature: {}\n'.format(caiyunData['result']['realtime']['temperature'])
-    text += 'Humidity: {}\n'.format(caiyunData['result']['realtime']['humidity'])
-    text += 'Wind Speed: {}\n'.format(caiyunData['result']['realtime']['wind']['speed'])
-    text += 'Precipitation: {}\n'.format(caiyunData['result']['realtime']['precipitation']['local']['intensity'])
-    text += 'Cloudrate: {}\n'.format(caiyunData['result']['realtime']['cloudrate'])
-    text += 'Skycon: {}\n'.format(caiyunData['result']['realtime']['skycon'])
-    text += 'AQI: {}\n'.format(caiyunData['result']['realtime']['aqi'])
+    logging.info('\\weather {}'.format(update.message.chat_id))
+
+    text = '清华当前天气情况：\n'
+    text += '温度: {}C°\n'.format(caiyunData['result']['realtime']['temperature'])
+    text += '湿度: {}%\n'.format(int(float(caiyunData['result']['realtime']['humidity'])*100))
+    text += '风速: {}m/s ({})\n'.format(caiyunData['result']['realtime']['wind']['speed'], level_windspeed(caiyunData['result']['realtime']['wind']['speed']))
+    text += '降水: {}\n'.format(deal_precipitation(caiyunData['result']['realtime']['precipitation']['local']['intensity']))
+    text += '天气: {}\n'.format(deal_skycon(caiyunData['result']['realtime']['skycon']))
+    text += 'AQI: {} ({})\n'.format(level_aqi(caiyunData['result']['realtime']['wind']['speed']), caiyunData['result']['realtime']['aqi'])
 
     bot.send_message(chat_id=update.message.chat_id, text=text)
 
@@ -127,7 +200,7 @@ def forecast_rain(bot):
     elif max(probability_2h) < base_probability:
         if rain_4h == False:
             rain_4h = True
-            bot.send_message(chat_id=group, text='There will be precipitation in 4 hours.')
+            bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
     else:
         precipitation = np.array(caiyunData['result']['minutely']['precipitation_2h'])
         global pre_start, pre_end
@@ -148,17 +221,17 @@ caiyunFailedCount = 0
 def caiyun(bot, job):
 
     global caiyunData
-    caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/weather.json?lang=en_US' \
+    caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/weather.json?lang=zh_CN' \
         .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
 
     with open('data/caiyun.json', 'w') as file:
         json.dump(caiyunData, file)
 
     if caiyunData['status'] != 'ok':
-        logging.warning('Failed to get CaiYun data.')
+        logging.warning('Failed to get data from CaiYun.')
         caiyunFailedCount += 1
         if caiyunFailedCount == 5:
-            bot.send_message(chat_id=group, text='Failed to get CaiYun data 5 times.')
+            bot.send_message(chat_id=owner, text='Failed to get data from CaiYun 5 times.')
         return
     else:
         caiyunFailedCount = 0
@@ -235,7 +308,7 @@ w_DATA = {}
 
 def weather_thu(bot, update):
 
-    logging.info('\\weather_thu')
+    logging.info('\\weather_thu {}'.format(update.message.chat_id))
 
     try:
         global serverSocket
