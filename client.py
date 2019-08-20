@@ -128,12 +128,12 @@ def detect():
                 json.dump(lastMessages, file)
 
         time.sleep(60)
+		
+lastRainfall = 0.0
 
 def rain():
 
-    global running
-
-    lastRainfall = 0.0
+    global running, lastRainfall
 
     while running:
 
