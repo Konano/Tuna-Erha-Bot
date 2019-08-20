@@ -10,6 +10,7 @@ from threading import Thread, Lock
 import crawler
 import random
 import math
+import numpy as np
 
 connectTimeLimit = 10
 
