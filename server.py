@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-16 02:05:08
+# @Last Modified time: 2019-08-20 17:40:22
 
 import time
 from socket import *
@@ -204,20 +204,21 @@ def forecast_rain(bot):
         if rain_4h == False:
             rain_4h = True
             bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
-    else:
-        precipitation = np.array(caiyunData['result']['minutely']['precipitation_2h'])
-        global pre_start, pre_end
-        rain_start = np.argmax(precipitation >= 0.03)
-        rain_end = np.argmax(precipitation < 0.03)
-        if (pre_start == 0  and rain_start > 0) or \
-           (pre_start >= 60 and rain_start < 60) or \
-           (pre_start >= 30 and rain_start < 30) or \
-           (pre_end == 0  and rain_end > 0) or \
-           (pre_end >= 60 and rain_end < 60) or \
-           (pre_end >= 30 and rain_end < 30):
-            bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint'])
-        pre_start = rain_start
-        pre_end = rain_end
+
+    precipitation = np.array(caiyunData['result']['minutely']['precipitation_2h'])
+    global pre_start, pre_end
+    rain_start = np.argmax(precipitation >= 0.03)
+    rain_end = np.argmax(precipitation < 0.03)
+    if (pre_start == 0  and rain_start > 0) or \
+       (pre_start >= 60 and rain_start < 60) or \
+       (pre_start >= 15 and rain_start < 15) or \
+       (pre_end == 0  and rain_end > 0) or \
+       (pre_end >= 60 and rain_end < 60) or \
+       (pre_end >= 15 and rain_end < 15):
+        # logging.info(caiyunData['result']['forecast_keypoint'], 'pre=({},{})'.format(pre_start, pre_end), 'n=({},{})'.format(rain_start, rain_end))
+        bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint'])
+    pre_start = rain_start
+    pre_end = rain_end
 
 caiyunFailedCount = 0
 

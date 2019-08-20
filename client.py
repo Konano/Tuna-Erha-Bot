@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-06-16 17:20:10
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-15 02:42:19
+# @Last Modified time: 2019-08-20 17:32:29
 
 import crawler
 import json
@@ -128,7 +128,7 @@ def detect():
                 json.dump(lastMessages, file)
 
         time.sleep(60)
-		
+
 lastRainfall = 0.0
 
 def rain():
@@ -190,10 +190,10 @@ def main():
         rn = Thread(target=rain)
         tr.start()
         dt.start()
-        rn.start()
+        # rn.start()
         tr.join()
         dt.join()
-        rn.join()
+        # rn.join()
         clientSocket.close()
 
 
