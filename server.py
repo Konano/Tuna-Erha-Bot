@@ -185,7 +185,7 @@ def weather(bot, update):
     text += '风速: {}m/s ({})\n'.format(caiyunData['result']['realtime']['wind']['speed'], level_windspeed(caiyunData['result']['realtime']['wind']['speed']))
     text += '降水: {}\n'.format(deal_precipitation(caiyunData['result']['realtime']['precipitation']['local']['intensity']))
     text += '天气: {}\n'.format(deal_skycon(caiyunData['result']['realtime']['skycon']))
-    text += 'AQI: {} ({})\n'.format(level_aqi(caiyunData['result']['realtime']['wind']['speed']), caiyunData['result']['realtime']['aqi'])
+    text += 'AQI: {} ({})\n'.format(level_aqi(caiyunData['result']['realtime']['aqi']), caiyunData['result']['realtime']['aqi'])
 
     bot.send_message(chat_id=update.message.chat_id, text=text)
 
