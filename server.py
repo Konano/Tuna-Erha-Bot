@@ -195,8 +195,14 @@ pre_start = pre_end = 0
 
 def forecast_rain(bot):
 
-    probability_2h = caiyunData['result']['minutely']['probability']
-    probability_4h = caiyunData['result']['minutely']['probability_4h']
+    try:
+        probability_2h = caiyunData['result']['minutely']['probability']
+    except:
+        probability_2h = [0,0,0,0]
+    try:
+        probability_4h = caiyunData['result']['minutely']['probability_4h']
+    except:
+        probability_4h = [0,0,0,0]
     global rain_4h
     if max(probability_4h) < base_probability:
         rain_4h = False
