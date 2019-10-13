@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-08-20 17:40:22
+# @Last Modified time: 2019-10-13 11:52:59
 
 import time
 from socket import *
@@ -189,8 +189,9 @@ def weather(bot, update):
 
     bot.send_message(chat_id=update.message.chat_id, text=text)
 
-base_probability = 0.9
-rain_4h = False
+start_probability = 0.8
+stop_probability = 0.2
+rain_4h = rain_2h = False
 pre_start = pre_end = 0
 
 def forecast_rain(bot):
@@ -203,18 +204,25 @@ def forecast_rain(bot):
         probability_4h = caiyunData['result']['minutely']['probability_4h']
     except:
         probability_4h = [0,0,0,0]
+
     global rain_4h
-    if max(probability_4h) < base_probability:
+    if max(probability_4h) < stop_probability and rain_4h == True:
         rain_4h = False
-    elif max(probability_2h) < base_probability:
-        if rain_4h == False:
-            rain_4h = True
-            bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
+    if max(probability_4h) > start_probability and rain_4h == False:
+        rain_4h = True
+        bot.send_message(chat_id=channel, text='未来四小时内可能会下雨。')
+
+    global rain_2h
+    if max(probability_2h) < stop_probability and rain_2h == True:
+        rain_2h = False
+    if max(probability_2h) > start_probability and rain_2h == False:
+        rain_2h = True
+        bot.send_message(chat_id=channel, text='未来两小时内可能会下雨。')
 
     precipitation = np.array(caiyunData['result']['minutely']['precipitation_2h'])
     global pre_start, pre_end
-    rain_start = np.argmax(precipitation >= 0.03)
-    rain_end = np.argmax(precipitation < 0.03)
+    rain_start = np.argmax(precipitation > 0.9)
+    rain_end = np.argmax(precipitation < 0.1)
     if (pre_start == 0  and rain_start > 0) or \
        (pre_start >= 60 and rain_start < 60) or \
        (pre_start >= 15 and rain_start < 15) or \
@@ -230,21 +238,25 @@ caiyunFailedCount = 0
 
 def caiyun(bot, job):
 
-    global caiyunData
-    caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/weather.json?lang=zh_CN' \
-        .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
+    global caiyunData, caiyunFailedCount
 
-    with open('data/caiyun.json', 'w') as file:
-        json.dump(caiyunData, file)
+    try:
+        caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/weather.json?lang=zh_CN' \
+            .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
 
-    if caiyunData['status'] != 'ok':
+        with open('data/caiyun.json', 'w') as file:
+            json.dump(caiyunData, file)
+
+        assert caiyunData['status'] == 'ok'
+        caiyunFailedCount = 0
+
+    except:
         logging.warning('Failed to get data from CaiYun.')
         caiyunFailedCount += 1
         if caiyunFailedCount == 5:
             bot.send_message(chat_id=owner, text='Failed to get data from CaiYun 5 times.')
+            caiyunFailedCount = 0
         return
-    else:
-        caiyunFailedCount = 0
 
     forecast_rain(bot)
 
