@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-10-13 11:52:59
+# @Last Modified time: 2019-10-13 11:56:25
 
 import time
 from socket import *
@@ -210,14 +210,14 @@ def forecast_rain(bot):
         rain_4h = False
     if max(probability_4h) > start_probability and rain_4h == False:
         rain_4h = True
-        bot.send_message(chat_id=channel, text='未来四小时内可能会下雨。')
+        bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
 
     global rain_2h
     if max(probability_2h) < stop_probability and rain_2h == True:
         rain_2h = False
     if max(probability_2h) > start_probability and rain_2h == False:
         rain_2h = True
-        bot.send_message(chat_id=channel, text='未来两小时内可能会下雨。')
+        bot.send_message(chat_id=group, text='未来两小时内可能会下雨。')
 
     precipitation = np.array(caiyunData['result']['minutely']['precipitation_2h'])
     global pre_start, pre_end
