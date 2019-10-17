@@ -2,7 +2,7 @@
 # @Author: Konano
 # @Date:   2019-05-28 14:12:29
 # @Last Modified by:   Konano
-# @Last Modified time: 2019-10-13 11:56:25
+# @Last Modified time: 2019-10-17 10:24:47
 
 import time
 from socket import *
@@ -191,48 +191,56 @@ def weather(bot, update):
 
 start_probability = 0.8
 stop_probability = 0.2
-rain_4h = rain_2h = False
-pre_start = pre_end = 0
+start_precipitation = 0.03
+stop_precipitation = 0.01
+rain_4h = rain_2h = rain_60 = rain_15 = rain_0 = False
 
 def forecast_rain(bot):
 
     try:
-        probability_2h = caiyunData['result']['minutely']['probability']
-    except:
-        probability_2h = [0,0,0,0]
-    try:
         probability_4h = caiyunData['result']['minutely']['probability_4h']
+        logging.info(probability_4h)
+        global rain_4h
+        if max(probability_4h) < stop_probability and rain_4h == True:
+            rain_4h = False
+            logging.info('rain_4h T to F')
+        if max(probability_4h) > start_probability and rain_4h == False:
+            rain_4h = True
+            bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
+            logging.info('rain_4h F to T')
     except:
-        probability_4h = [0,0,0,0]
+        pass
 
-    global rain_4h
-    if max(probability_4h) < stop_probability and rain_4h == True:
-        rain_4h = False
-    if max(probability_4h) > start_probability and rain_4h == False:
-        rain_4h = True
-        bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
+    try:
+        probability_2h = caiyunData['result']['minutely']['probability']
+        logging.info(probability_2h)
+        global rain_2h
+        if max(probability_2h) < stop_probability and rain_2h == True:
+            rain_2h = False
+            logging.info('rain_2h T to F')
+        if max(probability_2h) > start_probability and rain_2h == False:
+            rain_2h = True
+            bot.send_message(chat_id=group, text='未来两小时内可能会下雨。')
+            logging.info('rain_2h F to T')
+    except:
+        pass
 
-    global rain_2h
-    if max(probability_2h) < stop_probability and rain_2h == True:
-        rain_2h = False
-    if max(probability_2h) > start_probability and rain_2h == False:
-        rain_2h = True
-        bot.send_message(chat_id=group, text='未来两小时内可能会下雨。')
+    global rain_60, rain_15, rain_0
+    changed = False
+    precipitation = caiyunData['result']['minutely']['precipitation_2h']
+    logging.info('precipitationpre=(0:{},15:{},60:{})'.format(precipitation[0], precipitation[15], precipitation[60]))
+    if (precipitation[60] < stop_precipitation and rain_60 == True) or (precipitation[60] > start_precipitation and rain_60 == False):
+        rain_60 = not rain_60
+        changed = True
+    if (precipitation[15] < stop_precipitation and rain_15 == True) or (precipitation[15] > start_precipitation and rain_15 == False):
+        rain_15 = not rain_15
+        changed = True
+    if (precipitation[0] < stop_precipitation and rain_0 == True) or (precipitation[0] > start_precipitation and rain_0 == False):
+        rain_0 = not rain_0
+        changed = True
 
-    precipitation = np.array(caiyunData['result']['minutely']['precipitation_2h'])
-    global pre_start, pre_end
-    rain_start = np.argmax(precipitation > 0.9)
-    rain_end = np.argmax(precipitation < 0.1)
-    if (pre_start == 0  and rain_start > 0) or \
-       (pre_start >= 60 and rain_start < 60) or \
-       (pre_start >= 15 and rain_start < 15) or \
-       (pre_end == 0  and rain_end > 0) or \
-       (pre_end >= 60 and rain_end < 60) or \
-       (pre_end >= 15 and rain_end < 15):
-        # logging.info(caiyunData['result']['forecast_keypoint'], 'pre=({},{})'.format(pre_start, pre_end), 'n=({},{})'.format(rain_start, rain_end))
+    if changed:
         bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint'])
-    pre_start = rain_start
-    pre_end = rain_end
 
 caiyunFailedCount = 0
 
