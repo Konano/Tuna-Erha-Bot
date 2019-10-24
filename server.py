@@ -11,6 +11,10 @@ import crawler
 import random
 import math
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
 
 connectTimeLimit = 10
 
@@ -492,6 +496,21 @@ def callpolice(bot, update):
         text += emoji[random.randint(0, 3)]
     bot.send_message(chat_id=update.message.chat_id, text=text)
 
+def weather_graph(bot, update):
+
+    pic = 'pic/' + str(int(time.time())) + '.png'
+    logging.info('\\weather_graph {} {}'.format(update.message.chat_id, pic))
+
+    if not os.path.exists('pic/'):
+        os.makedirs('pic/')
+
+    precipitation = caiyunData['result']['minutely']['precipitation_2h']
+    plt.figure()
+    plt.plot(np.arange(120), np.array(precipitation))
+    plt.ylim(ymin = 0)
+    plt.title('precipitation in 2 hours')
+    plt.savefig(pic)
+    bot.send_photo(chat_id=update.message.chat_id, photo=open(pic, 'rb'))
 
 def main():
 
@@ -512,6 +531,7 @@ def main():
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
     dp.add_handler(CommandHandler('weather', weather))
     dp.add_handler(CommandHandler('callpolice', callpolice))
+    dp.add_handler(CommandHandler('weather_graph', weather_graph))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
