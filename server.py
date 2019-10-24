@@ -172,7 +172,7 @@ def forecast(bot, update):
     logging.info('\\forecast {}'.format(update.message.chat_id))
 
     pic = precipitation_graph()
-    bot.send_photo(chat_id=update.message.chat_id, photo=open(pic, 'rb'), cpation=caiyunData['result']['forecast_keypoint'])
+    bot.send_photo(chat_id=update.message.chat_id, photo=open(pic, 'rb'), caption=caiyunData['result']['forecast_keypoint'])
 
 def forecast_hourly(bot, update):
 
