@@ -507,14 +507,15 @@ def weather_graph(bot, update):
     precipitation = caiyunData['result']['minutely']['precipitation_2h']
     plt.figure()
     plt.plot(np.arange(120), np.array(precipitation))
+    
     plt.ylim(ymin = 0)
-
-    plt.hlines(0.03, 0, 120, colors='skyblue', linestyles='dashed')
-    if max(precipitation) > 0.25:
+    if plt.axis()[3] > 0.03:
+        plt.hlines(0.03, 0, 120, colors='skyblue', linestyles='dashed')
+    if plt.axis()[3] > 0.25:
         plt.hlines(0.25, 0, 120, colors='blue', linestyles='dashed')
-    elif max(precipitation) > 0.35:
+    if plt.axis()[3] > 0.35:
         plt.hlines(0.35, 0, 120, colors='orange', linestyles='dashed')
-    elif max(precipitation) > 0.48:
+    if plt.axis()[3] > 0.48:
         plt.hlines(0.48, 0, 120, colors='darkred', linestyles='dashed')
         
     plt.title('precipitation in 2 hours')
