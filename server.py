@@ -546,7 +546,7 @@ def main():
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
-    updater.job_queue.run_repeating(caiyun, interval=300, first=0, context=group)
+    updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
     updater.job_queue.run_repeating(forecast_daily, interval=10, first=0, context=group)
 
     dp.add_error_handler(error)
