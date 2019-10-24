@@ -510,7 +510,7 @@ def weather_graph(bot, update):
     plt.ylim(ymin = 0)
 
     plt.hlines(0.03, 0, 120, colors='skyblue', linestyles='dashed')
-    elif max(precipitation) > 0.25:
+    if max(precipitation) > 0.25:
         plt.hlines(0.25, 0, 120, colors='blue', linestyles='dashed')
     elif max(precipitation) > 0.35:
         plt.hlines(0.35, 0, 120, colors='orange', linestyles='dashed')
