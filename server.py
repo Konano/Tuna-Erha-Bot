@@ -204,7 +204,6 @@ def forecast_rain(bot):
 
     try:
         probability_4h = caiyunData['result']['minutely']['probability_4h']
-        logging.info(probability_4h)
         global rain_4h
         if max(probability_4h) < stop_probability and rain_4h == True:
             rain_4h = False
@@ -218,7 +217,6 @@ def forecast_rain(bot):
 
     try:
         probability_2h = caiyunData['result']['minutely']['probability']
-        logging.info(probability_2h)
         global rain_2h
         if max(probability_2h) < stop_probability and rain_2h == True:
             rain_2h = False
@@ -233,7 +231,6 @@ def forecast_rain(bot):
     global rain_60, rain_15, rain_0
     changed = False
     precipitation = caiyunData['result']['minutely']['precipitation_2h']
-    logging.info('precipitationpre=(0:{},15:{},60:{})'.format(precipitation[0], precipitation[15], precipitation[60]))
     if (precipitation[60] < stop_precipitation and rain_60 == True) or (precipitation[60] > start_precipitation and rain_60 == False):
         rain_60 = not rain_60
         changed = True
