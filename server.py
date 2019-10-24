@@ -171,7 +171,8 @@ def forecast(bot, update):
 
     logging.info('\\forecast {}'.format(update.message.chat_id))
 
-    bot.send_message(chat_id=update.message.chat_id, text=caiyunData['result']['forecast_keypoint'])
+    pic = precipitation_graph()
+    bot.send_photo(chat_id=update.message.chat_id, photo=open(pic, 'rb'), cpation=caiyunData['result']['forecast_keypoint'])
 
 def forecast_hourly(bot, update):
 
@@ -496,10 +497,10 @@ def callpolice(bot, update):
         text += emoji[random.randint(0, 3)]
     bot.send_message(chat_id=update.message.chat_id, text=text)
 
-def weather_graph(bot, update):
+def precipitation_graph():
 
     pic = 'pic/' + str(int(time.time())) + '.png'
-    logging.info('\\weather_graph {} {}'.format(update.message.chat_id, pic))
+    logging.info('\\precipitation_graph {}'.format(pic))
 
     if not os.path.exists('pic/'):
         os.makedirs('pic/')
@@ -520,7 +521,8 @@ def weather_graph(bot, update):
         
     plt.title('precipitation in 2 hours')
     plt.savefig(pic)
-    bot.send_photo(chat_id=update.message.chat_id, photo=open(pic, 'rb'))
+    
+    return pic
 
 def main():
 
@@ -541,7 +543,6 @@ def main():
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
     dp.add_handler(CommandHandler('weather', weather))
     dp.add_handler(CommandHandler('callpolice', callpolice))
-    dp.add_handler(CommandHandler('weather_graph', weather_graph))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
