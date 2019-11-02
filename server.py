@@ -258,26 +258,23 @@ caiyunFailedCount = 0
 def caiyun(bot, job):
 
     global caiyunData, caiyunFailedCount
-
     try:
         caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/weather.json?lang=zh_CN' \
             .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
 
+        assert caiyunData['status'] == 'ok'
+
         with open('data/caiyun.json', 'w') as file:
             json.dump(caiyunData, file)
 
-        assert caiyunData['status'] == 'ok'
         caiyunFailedCount = 0
+        forecast_rain(bot)
 
     except:
         logging.warning('Failed to get data from CaiYun.')
         caiyunFailedCount += 1
         if caiyunFailedCount == 5:
             bot.send_message(chat_id=owner, text='Failed to get data from CaiYun 5 times.')
-            caiyunFailedCount = 0
-        return
-
-    forecast_rain(bot)
 
 
 def mute(bot, update, args):
@@ -530,6 +527,10 @@ def precipitation_graph():
     
     return pic
 
+def new_message(bot, update):
+    global newmsg
+    newmsg = 0
+
 def main():
 
     if config['BOT'].getboolean('proxy'):
@@ -549,10 +550,11 @@ def main():
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
     dp.add_handler(CommandHandler('weather', weather))
     dp.add_handler(CommandHandler('callpolice', callpolice))
+    dp.add_handler(MessageHandler(Filters.text, new_message))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
-    updater.job_queue.run_repeating(caiyun, interval=180, first=0, context=group)
+    updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
     updater.job_queue.run_repeating(forecast_daily, interval=10, first=0, context=group)
 
     dp.add_error_handler(error)
