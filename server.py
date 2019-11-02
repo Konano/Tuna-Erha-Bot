@@ -38,7 +38,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d 
 logger = logging.getLogger(__name__)
 
 
-from telegram.ext import Updater, CommandHandler, Filters
+from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
 
 def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
@@ -202,6 +202,7 @@ rain_4h = rain_2h = rain_60 = rain_15 = rain_0 = False
 newmsg = 0
 
 def forecast_rain(bot):
+    global newmsg
 
     try:
         probability_4h = caiyunData['result']['minutely']['probability_4h']
@@ -268,14 +269,15 @@ def caiyun(bot, job):
             json.dump(caiyunData, file)
 
         caiyunFailedCount = 0
-        forecast_rain(bot)
 
     except:
         logging.warning('Failed to get data from CaiYun.')
         caiyunFailedCount += 1
         if caiyunFailedCount == 5:
             bot.send_message(chat_id=owner, text='Failed to get data from CaiYun 5 times.')
+        return
 
+    forecast_rain(bot)
 
 def mute(bot, update, args):
 
