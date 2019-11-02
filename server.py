@@ -195,10 +195,11 @@ def weather(bot, update):
     bot.send_message(chat_id=update.message.chat_id, text=text)
 
 start_probability = 0.8
-stop_probability = 0.2
+stop_probability = 0.1
 start_precipitation = 0.03
-stop_precipitation = 0.01
+stop_precipitation = 0.005
 rain_4h = rain_2h = rain_60 = rain_15 = rain_0 = False
+newmsg = 0
 
 def forecast_rain(bot):
 
@@ -217,16 +218,20 @@ def forecast_rain(bot):
 
     try:
         probability_2h = caiyunData['result']['minutely']['probability']
+        logging.info(probability_2h)
         global rain_2h
         if max(probability_2h) < stop_probability and rain_2h == True:
             rain_2h = False
             logging.info('rain_2h T to F')
         if max(probability_2h) > start_probability and rain_2h == False:
             rain_2h = True
-            bot.send_message(chat_id=group, text='未来两小时内可能会下雨。')
+            if newmsg > 0:
+                bot.edit_message_text(chat_id=group, text='未来两小时内可能会下雨。', message_id=newmsg)
+            else:
+                newmsg = bot.send_message(chat_id=group, text='未来两小时内可能会下雨。').message_id
             logging.info('rain_2h F to T')
     except:
-        pass
+        logging.info("Can't not find probability_2h")
 
     global rain_60, rain_15, rain_0
     changed = False
@@ -240,9 +245,13 @@ def forecast_rain(bot):
     if (precipitation[0] < stop_precipitation and rain_0 == True) or (precipitation[0] > start_precipitation and rain_0 == False):
         rain_0 = not rain_0
         changed = True
+    logging.info((precipitation[0], precipitation[15], precipitation[60], rain_0, rain_15, rain_60))
 
     if changed:
-        bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint'])
+        if newmsg > 0:
+            bot.edit_message_text(chat_id=group, text=caiyunData['result']['forecast_keypoint'], message_id=newmsg)
+        else:
+            newmsg = bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint']).message_id
 
 caiyunFailedCount = 0
 
@@ -543,7 +552,7 @@ def main():
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
-    updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
+    updater.job_queue.run_repeating(caiyun, interval=180, first=0, context=group)
     updater.job_queue.run_repeating(forecast_daily, interval=10, first=0, context=group)
 
     dp.add_error_handler(error)
