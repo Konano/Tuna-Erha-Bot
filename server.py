@@ -383,6 +383,7 @@ def weather_thu(bot, update):
     bot.send_message(update.message.chat_id, text)
 
 TESTSUC = 0
+connected = False
 
 def connectSocket():
 
@@ -390,14 +391,16 @@ def connectSocket():
     mainSocket.bind((config['SERVER']['ip'], config['SERVER'].getint('port')))
     mainSocket.listen(1)
 
-    global serverSocket
+    global serverSocket, connected
     logging.info('Wait for connection...')
+    connected = False
     serverSocket,destAdr = mainSocket.accept()
     serverSocket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
     serverSocket.setsockopt(SOL_TCP, TCP_KEEPIDLE, 10)
     serverSocket.setsockopt(SOL_TCP, TCP_KEEPINTVL, 6)
     serverSocket.setsockopt(SOL_TCP, TCP_KEEPCNT, 20)
     logging.info('Connect establish!')
+    connected = True
 
     global TESTSUC
     while True:
@@ -487,7 +490,8 @@ def forecast_daily(bot, job):
     global preTimeHash
     timeHash = time_hash(time.localtime())
     if preTimeHash < 0 and timeHash == 0:
-        bot.send_message(chat_id=group, text=caiyunData['result']['hourly']['description'])
+        text = '天气：' + caiyunData['result']['hourly']['description'] + '\n当前状态：' + ('已连接' if connected else '未连接')
+        bot.send_message(chat_id=group, text=text)
     preTimeHash = timeHash
 
 emoji = '👮🚔🚨🚓'

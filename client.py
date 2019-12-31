@@ -19,9 +19,9 @@ from threading import Thread
 
 import logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(funcName)s - %(message)s',
-                    # level=logging.INFO)
-                    level=logging.INFO,
-                    filename=config['CLIENT']['logfile'])
+                    level=logging.INFO)
+                    # level=logging.INFO,
+                    # filename=config['CLIENT']['logfile'])
 logger = logging.getLogger(__name__)
 
 SENDSUC = False
@@ -40,6 +40,8 @@ def sendMsg(msg):
         raise
     else:
         logging.info('SENDSUC')
+
+running = False
 
 def recvMsg(clientSocket):
 
@@ -187,7 +189,7 @@ def main():
         running = True
         tr = Thread(target=recvMsg,args=(clientSocket,))
         dt = Thread(target=detect)
-        rn = Thread(target=rain)
+        # rn = Thread(target=rain)
         tr.start()
         dt.start()
         # rn.start()
