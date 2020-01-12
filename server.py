@@ -219,7 +219,7 @@ def forecast_rain(bot):
 
     try:
         probability_2h = caiyunData['result']['minutely']['probability']
-        logging.info(probability_2h)
+        # logging.info(probability_2h)
         global rain_2h
         if max(probability_2h) < stop_probability and rain_2h == True:
             rain_2h = False
@@ -246,7 +246,7 @@ def forecast_rain(bot):
     if (precipitation[0] < stop_precipitation and rain_0 == True) or (precipitation[0] > start_precipitation and rain_0 == False):
         rain_0 = not rain_0
         changed = True
-    logging.info((precipitation[0], precipitation[15], precipitation[60], rain_0, rain_15, rain_60))
+    # logging.info((precipitation[0], precipitation[15], precipitation[60], rain_0, rain_15, rain_60))
 
     if changed:
         if newmsg > 0:
@@ -490,7 +490,7 @@ def forecast_daily(bot, job):
     global preTimeHash
     timeHash = time_hash(time.localtime())
     if preTimeHash < 0 and timeHash == 0:
-        text = '天气：' + caiyunData['result']['hourly']['description'] + '\n当前状态：' + ('已连接' if connected else '未连接')
+        text = '天气：' + caiyunData['result']['hourly']['description'] + '\n当前状态：' + ('正常' if connected else '异常')
         bot.send_message(chat_id=group, text=text)
     preTimeHash = timeHash
 
