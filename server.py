@@ -54,10 +54,11 @@ with open('data/mute.json', 'r') as file:
 lock = Lock()
 newMessages = []
 info_UPDATE = False
+today_news = {}
 
 def info(bot, job):
 
-    global newMessages, info_UPDATE
+    global newMessages, info_UPDATE, today_news
 
     if info_UPDATE == False:
         return
@@ -66,6 +67,11 @@ def info(bot, job):
     lock.acquire()
 
     try:
+        for each in newMessages:
+            if each['source'] not in today_news:
+                today_news[each['source']] = []
+            today_news[each['source']].append(each)
+
         newMessages = [each for each in newMessages if each['source'] not in mute_list]
 
         if newMessages != []:
@@ -480,19 +486,28 @@ def killed(bot, update):
 
     bot.send_message(owner, 'Killed.')
 
-def time_hash(t):
-    return t.tm_hour % 12 - 6
-
-preTimeHash = time_hash(time.localtime())
+preHour = time.localtime().tm_hour
 
 def forecast_daily(bot, job):
 
-    global preTimeHash
-    timeHash = time_hash(time.localtime())
-    if preTimeHash < 0 and timeHash == 0:
-        text = '天气：' + caiyunData['result']['hourly']['description'] + '\n当前状态：' + ('正常' if connected else '异常')
-        bot.send_message(chat_id=group, text=text)
-    preTimeHash = timeHash
+    global preHour
+    hour = time.localtime().tm_hour
+    if preHour != hour:
+        preHour = hour
+        if hour == 6 or hour == 18:
+            text = '天气：' + caiyunData['result']['hourly']['description'] + '\n当前状态：' + ('正常' if connected else '异常')
+            bot.send_message(chat_id=group, text=text)
+        elif hour == 23:
+            text = 'Today Info:'
+            global today_news
+            for source in today_news:
+                text += '\n' + ' - %s' % source
+                for news in today_news[source]:
+                    text += '\n' + '[%s](%s)' % (news['title'], news['url'])
+            today_news = {}
+            bot.send_message(chat_id=group,
+                                text=text,
+                                parse_mode='Markdown')
 
 emoji = '👮🚔🚨🚓'
 
