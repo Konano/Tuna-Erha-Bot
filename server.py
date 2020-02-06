@@ -53,12 +53,14 @@ with open('data/mute.json', 'r') as file:
 
 lock = Lock()
 newMessages = []
+delMessages = []
 info_UPDATE = False
 today_news = {}
+sended_news = {}
 
 def info(bot, job):
 
-    global newMessages, info_UPDATE, today_news
+    global newMessages, delMessages, info_UPDATE, today_news, sended_news
 
     if info_UPDATE == False:
         return
@@ -72,16 +74,32 @@ def info(bot, job):
                 today_news[each['source']] = []
             today_news[each['source']].append(each)
 
+        if delMessages != []:
+            logging.info('Detected del messages: ' + str(len(delMessages)))
+            for each in delMessages:
+                if each['url'] in sended_news:
+                    bot.delete_message( chat_id=group,
+                                        message_id=sended_news[each['url']])
+                    del sended_news[each['url']]
+                if each['source'] in today_news and each in today_news[each['source']]:
+                    today_news[each['source']].remove(each)
+                    if today_news[each['source']] == []:
+                        del today_news[each['source']]
+
         newMessages = [each for each in newMessages if each['source'] not in mute_list]
 
         if newMessages != []:
             logging.info('Detected new messages: ' + str(len(newMessages)))
             for each in newMessages:
-                bot.send_message(chat_id=group,
-                                 text='Info %s\n[%s](%s)' % (each['source'], each['title'], each['url']),
-                                 parse_mode='Markdown')
+                msg = bot.send_message( chat_id=group,
+                                        text='Info %s\n[%s](%s)' % (each['source'], each['title'], each['url']),
+                                        parse_mode='Markdown')
+                sended_news[each['url']] = msg.message_id
     except:
         pass
+        
+    newMessages = []
+    delMessages = []
 
     lock.release()
 
@@ -408,7 +426,7 @@ def connectSocket():
     logging.info('Connect establish!')
     connected = True
 
-    global TESTSUC
+    global TESTSUC, info_UPDATE
     while True:
         try:
             try:
@@ -443,12 +461,22 @@ def connectSocket():
                 elif msg[1] == 'E':
                     rain_UPDATE = -1
                 serverSocket.send('S'.encode('utf8'))
-            else:
+            elif msg[0] == 'I':
                 lock.acquire()
                 try:
-                    global newMessages, info_UPDATE
-                    newMessages   = json.loads(msg)
-                    info_UPDATE   = True
+                    global newMessages
+                    newMessages = json.loads(msg[1:])
+                    info_UPDATE = True
+                except:
+                    pass
+                lock.release()
+                serverSocket.send('S'.encode('utf8'))
+            elif msg[0] == 'D':
+                lock.acquire()
+                try:
+                    global delMessages
+                    delMessages = json.loads(msg[1:])
+                    info_UPDATE = True
                 except:
                     pass
                 lock.release()
@@ -499,12 +527,13 @@ def forecast_daily(bot, job):
             bot.send_message(chat_id=group, text=text)
         elif hour == 23:
             text = 'Today Info:'
-            global today_news
+            global today_news, sended_news
             for source in today_news:
                 text += '\n' + ' - %s' % source
                 for news in today_news[source]:
                     text += '\n' + '[%s](%s)' % (news['title'], news['url'])
             today_news = {}
+            sended_news = {}
             bot.send_message(chat_id=group,
                                 text=text,
                                 parse_mode='Markdown')
