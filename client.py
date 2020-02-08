@@ -103,13 +103,18 @@ def detect():
             logging.warning('empty messages')
 
         newMessages = []
+        delMessages = []
 
         for each in messages:
             if each not in lastMessages:
                 newMessages.append(each)
 
-        if len(newMessages) > 0:
-            logging.info('Messages: %d, New: %d'%(len(messages),len(newMessages)))
+        for each in lastMessages:
+            if each not in messages:
+                delMessages.append(each)
+
+        if len(newMessages) > 0 or len(delMessages) > 0:
+            logging.info('Messages: %d, New: %d, Del: %d'%(len(messages),len(newMessages),len(delMessages)))
 
         if len(newMessages) > 3:
             newMessages = newMessages[:3]
@@ -117,7 +122,7 @@ def detect():
         if newMessages != []:
 
             try:
-                sendMsg(json.dumps(newMessages))
+                sendMsg('I'+json.dumps(newMessages))
             except:
                 logging.exception('Connect Error')
                 running = False
@@ -126,8 +131,23 @@ def detect():
             for each in newMessages:
                 lastMessages.append(each)
 
-            with open('data/postinfo.json', 'w') as file:
-                json.dump(lastMessages, file)
+        if len(delMessages) > 3:
+            delMessages = delMessages[:3]
+
+        if delMessages != []:
+
+            try:
+                sendMsg('D'+json.dumps(delMessages))
+            except:
+                logging.exception('Connect Error')
+                running = False
+                return
+
+            for each in delMessages:
+                lastMessages.remove(each)
+
+        with open('data/postinfo.json', 'w') as file:
+            json.dump(lastMessages, file)
 
         time.sleep(60)
 
