@@ -15,6 +15,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
+import json
+
+import re
+import binascii
+from Crypto.Cipher import AES
 
 connectTimeLimit = 10
 
@@ -44,12 +49,58 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 
-# import crawler
-import json
-
 with open('data/mute.json', 'r') as file:
     mute_list = json.load(file)
-# logging.info(mute_list)
+
+
+def webvpn(url):
+
+    encryStr = b'wrdvpnisthebest!'
+
+    def encrypt(url):
+        url = str.encode(url)
+        cryptor = AES.new(encryStr, AES.MODE_CFB, encryStr, segment_size = 16*8)
+        
+        return bytes.decode(binascii.b2a_hex(encryStr)) + \
+            bytes.decode(binascii.b2a_hex(cryptor.encrypt(url)))
+
+    if url[0:7] == 'http://':
+        url = url[7:]
+        protocol = 'http'
+    elif url[0:8] == 'https://':
+        url = url[8:]
+        protocol = 'https'
+
+    v6 = re.match('[0-9a-fA-F:]+', url)
+    if v6 != None:
+        v6 = v6.group(0)
+        url = url[len(v6):]
+
+    segments = url.split('?')[0].split(':')
+    port = None
+    if len(segments) > 1:
+        port = segments[1].split('/')[0]
+        url = url[0: len(segments[0])] + url[len(segments[0]) + len(port) + 1:]
+
+    try:
+        idx = url.index('/')
+        host = url[0: idx]
+        path = url[idx:]
+        if v6 != None:
+            host = v6
+        url = encrypt(host) + path
+    except:
+        if v6 != None:
+            url = v6
+        url = encrypt(url)
+
+    if port != None:
+        url = 'https://webvpn.tsinghua.edu.cn/' + protocol + '-' + port + '/' + url
+    else:
+        url = 'https://webvpn.tsinghua.edu.cn/' + protocol + '/' + url
+
+    return url
+
 
 lock = Lock()
 newMessages = []
@@ -92,11 +143,12 @@ def info(bot, job):
             logging.info('Detected new messages: ' + str(len(newMessages)))
             for each in newMessages:
                 msg = bot.send_message( chat_id=group,
-                                        text='Info %s\n[%s](%s)' % (each['source'], each['title'], each['url']),
-                                        parse_mode='Markdown')
+                                        text='Info %s\n[%s](%s) [(webvpn)](%s)' % (each['source'], each['title'], each['url'], webvpn(each['url'])),
+                                        parse_mode='Markdown',
+                                        disable_web_page_preview=True)
                 sended_news[each['url']] = msg.message_id
-    except:
-        pass
+    except Exception as e:
+        logging.error(e)
         
     newMessages = []
     delMessages = []
@@ -117,8 +169,8 @@ def rain_thu(bot, job):
             bot.send_message(chat_id=group, text='下雨了。')
         elif rain_UPDATE == -1:
             bot.send_message(chat_id=group, text='雨停了。')
-    except:
-        pass
+    except Exception as e:
+        logging.error(e)
 
     rain_UPDATE = 0
 
@@ -228,18 +280,18 @@ newmsg = 0
 def forecast_rain(bot):
     global newmsg
 
-    try:
-        probability_4h = caiyunData['result']['minutely']['probability_4h']
-        global rain_4h
-        if max(probability_4h) < stop_probability and rain_4h == True:
-            rain_4h = False
-            logging.info('rain_4h T to F')
-        if max(probability_4h) > start_probability and rain_4h == False:
-            rain_4h = True
-            bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
-            logging.info('rain_4h F to T')
-    except:
-        pass
+    # try:
+    #     probability_4h = caiyunData['result']['minutely']['probability_4h']
+    #     global rain_4h
+    #     if max(probability_4h) < stop_probability and rain_4h == True:
+    #         rain_4h = False
+    #         logging.info('rain_4h T to F')
+    #     if max(probability_4h) > start_probability and rain_4h == False:
+    #         rain_4h = True
+    #         bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
+    #         logging.info('rain_4h F to T')
+    # except:
+    #     pass
 
     try:
         probability_2h = caiyunData['result']['minutely']['probability']
@@ -255,8 +307,8 @@ def forecast_rain(bot):
             else:
                 newmsg = bot.send_message(chat_id=group, text='未来两小时内可能会下雨。').message_id
             logging.info('rain_2h F to T')
-    except:
-        logging.info("Can't not find probability_2h")
+    except Exception as e:
+        logging.error(e)
 
     global rain_60, rain_15, rain_0
     changed = False
@@ -465,20 +517,20 @@ def connectSocket():
                 lock.acquire()
                 try:
                     global newMessages
-                    newMessages = json.loads(msg[1:])
+                    newMessages.extend(json.loads(msg[1:]))
                     info_UPDATE = True
-                except:
-                    pass
+                except Exception as e:
+                    logging.error(e)
                 lock.release()
                 serverSocket.send('S'.encode('utf8'))
             elif msg[0] == 'D':
                 lock.acquire()
                 try:
                     global delMessages
-                    delMessages = json.loads(msg[1:])
+                    delMessages.extend(json.loads(msg[1:]))
                     info_UPDATE = True
-                except:
-                    pass
+                except Exception as e:
+                    logging.error(e)
                 lock.release()
                 serverSocket.send('S'.encode('utf8'))
 
