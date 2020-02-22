@@ -365,7 +365,7 @@ def daily_weather(dayornight):
     if dayornight == 'day':
         return \
             '天气：{}\n'.format(caiyunData['result']['hourly']['description']) + \
-            '温度：{}~{}°C\n'.format(caiyun_temp_min(), caiyun_temp_max()) + \
+            '温度：{}~{}℃\n'.format(caiyun_temp_min(), caiyun_temp_max()) + \
             '湿度：{}%\n'.format(int(caiyun_humi_avg()*100)) + \
             '风速：{}m/s ({})\n'.format(caiyun_wind_avg(), level_windspeed(caiyun_wind_avg())) + \
             '能见度：{}km\n'.format(caiyun_visi_avg()) + \
@@ -378,7 +378,7 @@ def daily_weather(dayornight):
     else:
         return \
             '天气：{}\n'.format(caiyunData['result']['hourly']['description']) + \
-            '温度：{}~{}°C\n'.format(caiyun_temp_min(), caiyun_temp_max()) + \
+            '温度：{}~{}℃\n'.format(caiyun_temp_min(), caiyun_temp_max()) + \
             '湿度：{}%\n'.format(int(caiyun_humi_avg()*100)) + \
             '风速：{}m/s ({})\n'.format(caiyun_wind_avg(), level_windspeed(caiyun_wind_avg())) + \
             '能见度：{}km\n'.format(caiyun_visi_avg()) + \
@@ -396,7 +396,7 @@ def weather_today(update, context):
 
     text = \
         '清华今日天气：{}\n'.format(caiyunData['result']['hourly']['description']) + \
-        '温度：{}~{}°C\n'.format(caiyunData['result']['daily']['temperature'][0]['min'], caiyunData['result']['daily']['temperature'][0]['max']) + \
+        '温度：{}~{}℃\n'.format(caiyunData['result']['daily']['temperature'][0]['min'], caiyunData['result']['daily']['temperature'][0]['max']) + \
         '湿度：{}%\n'.format(int(float(caiyunData['result']['daily']['humidity'][0]['avg'])*100)) + \
         '风速：{}m/s ({})\n'.format(caiyunData['result']['daily']['wind'][0]["avg"]['speed'], level_windspeed(caiyunData['result']['daily']['wind'][0]["avg"]['speed'])) + \
         '能见度：{}km\n'.format(caiyunData['result']['daily']['visibility'][0]['avg']) + \
@@ -456,9 +456,9 @@ def weather(update, context):
 
     text = ''
     text += '清华当前天气：{}\n'.format(deal_skycon(caiyunData['result']['realtime']['skycon']))
-    text += '温度：{}C°\n'.format(caiyunData['result']['realtime']['temperature'])
+    text += '温度：{}℃\n'.format(caiyunData['result']['realtime']['temperature'])
     if 'apparent_temperature' in caiyunData['result']['realtime']:
-        text += '体感：{}C°\n'.format(caiyunData['result']['realtime']['apparent_temperature'])
+        text += '体感：{}℃\n'.format(caiyunData['result']['realtime']['apparent_temperature'])
     text += '湿度：{}%\n'.format(int(float(caiyunData['result']['realtime']['humidity'])*100))
     text += '风向：{}\n'.format(wind_direction(caiyunData['result']['realtime']['wind']['direction']))
     text += '风速：{}m/s ({})\n'.format(caiyunData['result']['realtime']['wind']['speed'], level_windspeed(caiyunData['result']['realtime']['wind']['speed']))
@@ -640,7 +640,7 @@ def weather_thu(update, context):
             text += '\n'
         text += station['location'] + '\n'
         text += station['date'] + ' ' + station['time'] + '\n'
-        text += '{}°C  {}%  {}m/s  {}mm\n'.format(station['temperature'], station['humidity'], station['wind_speed'], station['rainfall_10mins'])
+        text += '{}℃  {}%  {}m/s  {}mm\n'.format(station['temperature'], station['humidity'], station['wind_speed'], station['rainfall_10mins'])
     context.bot.send_message(update.message.chat_id, text)
 
 
