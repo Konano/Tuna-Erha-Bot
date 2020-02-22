@@ -1,9 +1,3 @@
-﻿# -*- coding: utf-8 -*-
-# @Author: Konano
-# @Date:   2019-05-28 14:12:29
-# @Last Modified by:   Konano
-# @Last Modified time: 2019-10-17 10:24:47
-
 import time
 from socket import *
 from threading import Thread, Lock
@@ -16,14 +10,28 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 import json
-
 import re
 import binascii
 from Crypto.Cipher import AES
+import configparser
+from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
+
+
+# Connect
 
 connectTimeLimit = 10
 
-import configparser
+class InvalidParameter(Exception):
+    """Invalid Parameter"""
+
+class ConnectError(Exception):
+    """Connect Error"""
+
+class ConnectTimeout(Exception):
+    """Connect Timeout"""
+
+
+# Config
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -35,6 +43,8 @@ def update_config():
         config.write(configFile)
 
 
+# Log
+
 import logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(funcName)s - %(message)s',
                     level=logging.INFO)
@@ -43,15 +53,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d 
 logger = logging.getLogger(__name__)
 
 
-from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
-
-def error(bot, update, error):
-    logger.warning('Update "%s" caused error "%s"', update, error)
-
-
-with open('data/mute.json', 'r') as file:
-    mute_list = json.load(file)
-
+# WebVPN
 
 def webvpn(url):
 
@@ -102,20 +104,22 @@ def webvpn(url):
     return url
 
 
+# Info
+
 lock = Lock()
 newMessages = []
 delMessages = []
-info_UPDATE = False
+INFO_UPDATE = False
 today_news = {}
 sended_news = {}
 
-def info(bot, job):
+def info(context):
 
-    global newMessages, delMessages, info_UPDATE, today_news, sended_news
+    global newMessages, delMessages, INFO_UPDATE, today_news, sended_news
 
-    if info_UPDATE == False:
+    if INFO_UPDATE == False:
         return
-    info_UPDATE = False
+    INFO_UPDATE = False
 
     lock.acquire()
 
@@ -129,7 +133,7 @@ def info(bot, job):
             logging.info('Detected del messages: ' + str(len(delMessages)))
             for each in delMessages:
                 if each['url'] in sended_news:
-                    bot.delete_message( chat_id=group,
+                    context.bot.delete_message( chat_id=group,
                                         message_id=sended_news[each['url']])
                     del sended_news[each['url']]
                 if each['source'] in today_news and each in today_news[each['source']]:
@@ -142,7 +146,7 @@ def info(bot, job):
         if newMessages != []:
             logging.info('Detected new messages: ' + str(len(newMessages)))
             for each in newMessages:
-                msg = bot.send_message( chat_id=group,
+                msg = context.bot.send_message( chat_id=group,
                                         text='Info %s\n[%s](%s) [(webvpn)](%s)' % (each['source'], each['title'], each['url'], webvpn(each['url'])),
                                         parse_mode='Markdown',
                                         disable_web_page_preview=True)
@@ -155,42 +159,40 @@ def info(bot, job):
 
     lock.release()
 
-rain_UPDATE = 0
+
+"""
+RAIN_UPDATE = 0
 
 def rain_thu(bot, job):
 
-    global rain_UPDATE
+    global RAIN_UPDATE
 
-    if rain_UPDATE == 0:
+    if RAIN_UPDATE == 0:
         return
 
     try:
-        if rain_UPDATE == +1:
-            bot.send_message(chat_id=group, text='下雨了。')
-        elif rain_UPDATE == -1:
-            bot.send_message(chat_id=group, text='雨停了。')
+        if RAIN_UPDATE == +1:
+            context.bot.send_message(chat_id=group, text='下雨了。')
+        elif RAIN_UPDATE == -1:
+            context.bot.send_message(chat_id=group, text='雨停了。')
     except Exception as e:
         logging.error(e)
 
-    rain_UPDATE = 0
+    RAIN_UPDATE = 0
+"""
 
+
+# Caiyun
 
 def deal_precipitation(str):
 
     intensity = float(str)
-
-    if intensity == 0:
-        return '无'
-    elif intensity < 0.03:
-        return '毛毛雨'
-    elif intensity < 0.25:
-        return '小雨'
-    elif intensity < 0.35:
-        return '中雨'
-    elif intensity < 0.48:
-        return '大雨'
-    else:
-        return '暴雨'
+    if intensity == 0: return '无'
+    elif intensity < 0.031: return '毛毛雨'
+    elif intensity < 0.25: return '小雨'
+    elif intensity < 0.35: return '中雨'
+    elif intensity < 0.48: return '大雨'
+    else: return '暴雨'
 
 def deal_skycon(str):
 
@@ -200,25 +202,32 @@ def deal_skycon(str):
         'PARTLY_CLOUDY_DAY': '多云',
         'PARTLY_CLOUDY_NIGHT': '多云',
         'CLOUDY': '阴',
-        'WIND': '大风',
+        'LIGHT_HAZE': '轻度雾霾',
+        'MODERATE_HAZE': '中度雾霾',
+        'HEAVY_HAZE': '重度雾霾',
         'HAZE': '雾霾',
+        'LIGHT_RAIN': '小雨',
+        'MODERATE_RAIN': '中雨',
+        'HEAVY_RAIN': '大雨',
+        'STORM_RAIN': '暴雨',
         'RAIN': '雨',
-        'SNOW': '雪'
+        'FOG': '雾',
+        'LIGHT_SNOW': '小雪',
+        'MODERATE_SNOW': '中雪',
+        'HEAVY_SNOW': '大雪',
+        'STORM_SNOW': '暴雪',
+        'SNOW': '雪',
+        'WIND': '大风',
+        'DUST': '浮尘',
+        'SAND': '沙尘',
+        'THUNDER_SHOWER': '雷阵雨',
+        'HAIL': '冰雹',
+        'SLEET': '雨夹雪'
     }
     try:
         return switch[str]
     except KeyError as e:
-        return 'ERROR'
-
-def level_aqi(str):
-
-    aqi = int(str)
-    if aqi <= 50: return '优'
-    elif aqi <= 100: return '良'
-    elif aqi <= 150: return '轻度污染'
-    elif aqi <= 200: return '中度污染'
-    elif aqi <= 300: return '重度污染'
-    else: return '严重污染'
+        return str
 
 def level_windspeed(str):
 
@@ -243,72 +252,252 @@ def level_windspeed(str):
     elif speed <= 61.2: return 'Lv 17'
     else: return 'Lv >17'
 
-def forecast(bot, update):
+def dir_diff(a, b):
+    c = a - b
+    if c > 180:
+        c -= 360
+    if c < -180:
+        c += 360
+    return c
+
+def dir_diff_abs(a, b):
+    if a < b:
+        a, b = b, a
+    return min(a - b, 360 - (a - b))
+
+def wind_direction(str):
+
+    dir = float(str)
+    dir_val = [0, 45, 90, 135, 180, 225, 270, 315]
+    dir_desc = ['正北', '东北', '正东', '东南', '正南', '西南', '正西', '西北']
+    dir_bias = ['西东', '北东', '北南', '东南', '东西', '南西', '南北', '西北']
+
+    main_dir = 0
+    for i in range(1, 8):
+        if dir_diff_abs(dir, dir_val[i]) < dir_diff_abs(dir, dir_val[main_dir]):
+            main_dir = i
+    str = dir_desc[main_dir]
+    if dir_diff(dir, dir_val[main_dir]) < 0:
+        str += '偏' + dir_bias[main_dir][:1]
+    else:
+        str += '偏' + dir_bias[main_dir][-1:]
+    return str
+
+def alert_type(str):
+    
+    switchA = {
+        '01': '台风',
+        '02': '暴雨',
+        '03': '暴雪',
+        '04': '寒潮',
+        '05': '大风',
+        '06': '沙尘暴',
+        '07': '高温',
+        '08': '干旱',
+        '09': '雷电',
+        '10': '冰雹',
+        '11': '霜冻',
+        '12': '大雾',
+        '13': '霾',
+        '14': '道路结冰',
+        '15': '森林火灾',
+        '16': '雷雨大风'
+    }
+    switchB = {
+        '01': '蓝色预警',
+        '02': '黄色预警',
+        '03': '橙色预警',
+        '04': '红色预警'
+    }
+
+    try:
+        return switchA[str[:2]] + switchB[str[-2:]]
+    except KeyError as e:
+        return str + '(UnknownCode)'
+
+def alert_now():
+
+    alerts = []
+    if caiyunData['result']['alert']['status'] == 'ok':
+        for each in caiyunData['result']['alert']['content']:
+            if each['request_status'] == 'ok':
+                alerts.append(alert_type(each['code']))
+    return alerts
+
+def caiyun_temp_min():
+    temp_min = 999.99
+    for i in range(12):
+        temp_min = min(temp_min, float(caiyunData['result']['hourly']['temperature'][i]['value']))
+    return temp_min
+
+def caiyun_temp_max():
+    temp_max = -999.99
+    for i in range(12):
+        temp_max = max(temp_max, float(caiyunData['result']['hourly']['temperature'][i]['value']))
+    return temp_max
+
+def caiyun_humi_avg():
+    humi_avg = 0.0
+    for i in range(12):
+        humi_avg += float(caiyunData['result']['hourly']['humidity'][i]['value'])
+    return round(humi_avg / 12, 2)
+
+def caiyun_wind_avg():
+    wind_avg = 0.0
+    for i in range(12):
+        wind_avg += float(caiyunData['result']['hourly']['wind'][i]['speed'])
+    return round(wind_avg / 12, 1)
+
+def caiyun_visi_avg():
+    visi_avg = 0.0
+    for i in range(12):
+        visi_avg += float(caiyunData['result']['hourly']['visibility'][i]['value'])
+    return round(visi_avg / 12, 2)
+
+def caiyun_aqi_avg():
+    aqi_avg = 0.0
+    for i in range(12):
+        aqi_avg += float(caiyunData['result']['hourly']['air_quality']['aqi'][i]['value']['chn'])
+    return int(aqi_avg / 12)
+
+def daily_weather(dayornight):
+
+    if dayornight == 'day':
+        return \
+            '天气：{}\n'.format(caiyunData['result']['hourly']['description']) + \
+            '温度：{}~{}°C\n'.format(caiyun_temp_min(), caiyun_temp_max()) + \
+            '湿度：{}%\n'.format(int(caiyun_humi_avg()*100)) + \
+            '风速：{}m/s ({})\n'.format(caiyun_wind_avg(), level_windspeed(caiyun_wind_avg())) + \
+            '能见度：{}km\n'.format(caiyun_visi_avg()) + \
+            '今日日出：{}\n'.format(caiyunData['result']['daily']['astro'][0]['sunrise']['time']) + \
+            '今日日落：{}\n'.format(caiyunData['result']['daily']['astro'][0]['sunset']['time']) + \
+            'AQI：{}\n'.format(caiyun_aqi_avg()) + \
+            '紫外线：{}\n'.format(caiyunData['result']['daily']['life_index']['ultraviolet'][0]['desc']) + \
+            '舒适度：{}\n'.format(caiyunData['result']['daily']['life_index']['comfort'][0]['desc']) + \
+            ('现挂预警信号：{}\n'.format(' '.join(alert_now())) if alert_now() != [] else '')
+    else:
+        return \
+            '天气：{}\n'.format(caiyunData['result']['hourly']['description']) + \
+            '温度：{}~{}°C\n'.format(caiyun_temp_min(), caiyun_temp_max()) + \
+            '湿度：{}%\n'.format(int(caiyun_humi_avg()*100)) + \
+            '风速：{}m/s ({})\n'.format(caiyun_wind_avg(), level_windspeed(caiyun_wind_avg())) + \
+            '能见度：{}km\n'.format(caiyun_visi_avg()) + \
+            '明日日出：{}\n'.format(caiyunData['result']['daily']['astro'][1]['sunrise']['time']) + \
+            '明日日落：{}\n'.format(caiyunData['result']['daily']['astro'][1]['sunset']['time']) + \
+            'AQI：{}\n'.format(caiyun_aqi_avg()) + \
+            ('现挂预警信号：{}\n'.format(' '.join(alert_now())) if alert_now() != [] else '')
+
+def weather_today(update, context):
+
+    logging.info('\\weather_today')
+
+    assert caiyunData['result']['hourly']['status'] == 'ok'
+    assert caiyunData['result']['daily']['status'] == 'ok'
+
+    text = \
+        '清华今日天气：{}\n'.format(caiyunData['result']['hourly']['description']) + \
+        '温度：{}~{}°C\n'.format(caiyunData['result']['daily']['temperature'][0]['min'], caiyunData['result']['daily']['temperature'][0]['max']) + \
+        '湿度：{}%\n'.format(int(float(caiyunData['result']['daily']['humidity'][0]['avg'])*100)) + \
+        '风速：{}m/s ({})\n'.format(caiyunData['result']['daily']['wind'][0]["avg"]['speed'], level_windspeed(caiyunData['result']['daily']['wind'][0]["avg"]['speed'])) + \
+        '能见度：{}km\n'.format(caiyunData['result']['daily']['visibility'][0]['avg']) + \
+        '日出：{}\n'.format(caiyunData['result']['daily']['astro'][0]['sunrise']['time']) + \
+        '日落：{}\n'.format(caiyunData['result']['daily']['astro'][0]['sunset']['time']) + \
+        'AQI：{}\n'.format(caiyunData['result']['daily']['air_quality']['aqi'][0]['avg']['chn']) + \
+        '紫外线：{}\n'.format(caiyunData['result']['daily']['life_index']['ultraviolet'][0]['desc']) + \
+        '舒适度：{}\n'.format(caiyunData['result']['daily']['life_index']['comfort'][0]['desc']) + \
+        ('现挂预警信号：{}\n'.format(' '.join(alert_now())) if alert_now() != [] else '')
+
+    context.bot.send_message(chat_id=update.message.chat_id, text=text)
+
+def precipitation_graph():
+
+    pic = 'pic/' + str(int(time.time())) + '.png'
+    logging.info('\\precipitation_graph {}'.format(pic))
+
+    if not os.path.exists('pic/'):
+        os.makedirs('pic/')
+
+    precipitation = caiyunData['result']['minutely']['precipitation_2h']
+    plt.figure(figsize=(6,3))
+    plt.plot(np.arange(120), np.array(precipitation))
+    plt.ylim(ymin = 0)
+    if plt.axis()[3] > 0.03:
+        plt.hlines(0.03, 0, 120, colors='skyblue', linestyles='dashed')
+    if plt.axis()[3] > 0.25:
+        plt.hlines(0.25, 0, 120, colors='blue', linestyles='dashed')
+    if plt.axis()[3] > 0.35:
+        plt.hlines(0.35, 0, 120, colors='orange', linestyles='dashed')
+    if plt.axis()[3] > 0.48:
+        plt.hlines(0.48, 0, 120, colors='darkred', linestyles='dashed')
+        
+    plt.title('precipitation in 2 hours')
+    plt.savefig(pic)
+    
+    return pic
+
+def forecast(update, context):
 
     logging.info('\\forecast {}'.format(update.message.chat_id))
 
     pic = precipitation_graph()
-    bot.send_photo(chat_id=update.message.chat_id, photo=open(pic, 'rb'), caption=caiyunData['result']['forecast_keypoint'])
+    context.bot.send_photo(chat_id=update.message.chat_id, photo=open(pic, 'rb'), caption=caiyunData['result']['forecast_keypoint'])
 
-def forecast_hourly(bot, update):
+def forecast_hourly(update, context):
 
     logging.info('\\forecast_hourly {}'.format(update.message.chat_id))
 
-    bot.send_message(chat_id=update.message.chat_id, text=caiyunData['result']['hourly']['description'])
+    context.bot.send_message(chat_id=update.message.chat_id, text=caiyunData['result']['hourly']['description'])
 
-def weather(bot, update):
+def weather(update, context):
 
     logging.info('\\weather {}'.format(update.message.chat_id))
 
-    text = '清华当前天气情况：\n'
-    text += '温度: {}C°\n'.format(caiyunData['result']['realtime']['temperature'])
-    text += '湿度: {}%\n'.format(int(float(caiyunData['result']['realtime']['humidity'])*100))
-    text += '风速: {}m/s ({})\n'.format(caiyunData['result']['realtime']['wind']['speed'], level_windspeed(caiyunData['result']['realtime']['wind']['speed']))
-    text += '降水: {}\n'.format(deal_precipitation(caiyunData['result']['realtime']['precipitation']['local']['intensity']))
-    text += '天气: {}\n'.format(deal_skycon(caiyunData['result']['realtime']['skycon']))
-    text += 'AQI: {} ({})\n'.format(level_aqi(caiyunData['result']['realtime']['aqi']), caiyunData['result']['realtime']['aqi'])
+    assert caiyunData['result']['realtime']['status'] == 'ok'
 
-    bot.send_message(chat_id=update.message.chat_id, text=text)
+    text = ''
+    text += '清华当前天气：{}\n'.format(deal_skycon(caiyunData['result']['realtime']['skycon']))
+    text += '温度：{}C°\n'.format(caiyunData['result']['realtime']['temperature'])
+    if 'apparent_temperature' in caiyunData['result']['realtime']:
+        text += '体感：{}C°\n'.format(caiyunData['result']['realtime']['apparent_temperature'])
+    text += '湿度：{}%\n'.format(int(float(caiyunData['result']['realtime']['humidity'])*100))
+    text += '风向：{}\n'.format(wind_direction(caiyunData['result']['realtime']['wind']['direction']))
+    text += '风速：{}m/s ({})\n'.format(caiyunData['result']['realtime']['wind']['speed'], level_windspeed(caiyunData['result']['realtime']['wind']['speed']))
+    if caiyunData['result']['realtime']['precipitation']['local']['status'] == 'ok':
+        text += '降水：{}\n'.format(deal_precipitation(caiyunData['result']['realtime']['precipitation']['local']['intensity']))
+    text += '能见度：{}km\n'.format(caiyunData['result']['realtime']['visibility'])
+    text += 'PM2.5：{}\n'.format(caiyunData['result']['realtime']['air_quality']['pm25'])
+    text += 'AQI：{} ({})\n'.format(caiyunData['result']['realtime']['air_quality']['aqi']['chn'], caiyunData['result']['realtime']['air_quality']['description']['chn'])
+    text += '紫外线：{}\n'.format(caiyunData['result']['realtime']['life_index']['ultraviolet']['desc'])
+    text += '舒适度：{}\n'.format(caiyunData['result']['realtime']['life_index']['comfort']['desc'])
+    if alert_now() != []:
+        text += '现挂预警信号：{}\n'.format(' '.join(alert_now()))
+
+    context.bot.send_message(chat_id=update.message.chat_id, text=text)
 
 start_probability = 0.8
 stop_probability = 0.1
 start_precipitation = 0.03
 stop_precipitation = 0.005
-rain_4h = rain_2h = rain_60 = rain_15 = rain_0 = False
+rain_2h = rain_60 = rain_15 = rain_0 = False
 newmsg = 0
 
 def forecast_rain(bot):
+
     global newmsg
+    assert caiyunData['result']['minutely']['status'] == 'ok'
 
-    # try:
-    #     probability_4h = caiyunData['result']['minutely']['probability_4h']
-    #     global rain_4h
-    #     if max(probability_4h) < stop_probability and rain_4h == True:
-    #         rain_4h = False
-    #         logging.info('rain_4h T to F')
-    #     if max(probability_4h) > start_probability and rain_4h == False:
-    #         rain_4h = True
-    #         bot.send_message(chat_id=group, text='未来四小时内可能会下雨。')
-    #         logging.info('rain_4h F to T')
-    # except:
-    #     pass
-
-    try:
-        probability_2h = caiyunData['result']['minutely']['probability']
-        # logging.info(probability_2h)
-        global rain_2h
-        if max(probability_2h) < stop_probability and rain_2h == True:
-            rain_2h = False
-            logging.info('rain_2h T to F')
-        if max(probability_2h) > start_probability and rain_2h == False:
-            rain_2h = True
-            if newmsg > 0:
-                bot.edit_message_text(chat_id=group, text='未来两小时内可能会下雨。', message_id=newmsg)
-            else:
-                newmsg = bot.send_message(chat_id=group, text='未来两小时内可能会下雨。').message_id
-            logging.info('rain_2h F to T')
-    except Exception as e:
-        logging.error(e)
+    probability_2h = caiyunData['result']['minutely']['probability']
+    global rain_2h
+    if max(probability_2h) < stop_probability and rain_2h == True:
+        rain_2h = False
+        logging.info('rain_2h T to F')
+    if max(probability_2h) > start_probability and rain_2h == False:
+        rain_2h = True
+        if newmsg > 0:
+            bot.edit_message_text(chat_id=group, text='未来两小时内可能会下雨。', message_id=newmsg)
+        else:
+            newmsg = bot.send_message(chat_id=group, text='未来两小时内可能会下雨。').message_id
+        logging.info('rain_2h F to T')
 
     global rain_60, rain_15, rain_0
     changed = False
@@ -322,7 +511,6 @@ def forecast_rain(bot):
     if (precipitation[0] < stop_precipitation and rain_0 == True) or (precipitation[0] > start_precipitation and rain_0 == False):
         rain_0 = not rain_0
         changed = True
-    # logging.info((precipitation[0], precipitation[15], precipitation[60], rain_0, rain_15, rain_60))
 
     if changed:
         if newmsg > 0:
@@ -331,12 +519,13 @@ def forecast_rain(bot):
             newmsg = bot.send_message(chat_id=group, text=caiyunData['result']['forecast_keypoint']).message_id
 
 caiyunFailedCount = 0
+alerts = {}
 
-def caiyun(bot, job):
+def caiyun(context):
 
     global caiyunData, caiyunFailedCount
     try:
-        caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2/{}/{},{}/weather.json?lang=zh_CN' \
+        caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2.5/{}/{},{}/weather.json?lang=zh_CN&alert=true' \
             .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
 
         assert caiyunData['status'] == 'ok'
@@ -350,79 +539,75 @@ def caiyun(bot, job):
         logging.warning('Failed to get data from CaiYun.')
         caiyunFailedCount += 1
         if caiyunFailedCount == 5:
-            bot.send_message(chat_id=owner, text='Failed to get data from CaiYun 5 times.')
+            context.bot.send_message(chat_id=owner, text='Failed to get data from CaiYun 5 times.')
         return
 
-    forecast_rain(bot)
+    forecast_rain(context.bot)
 
-def mute(bot, update, args):
+    if caiyunData['result']['alert']['status'] == 'ok':
+        for each in caiyunData['result']['alert']['content']:
+            if each['request_status'] == 'ok' and each['alertId'] not in alerts:
+                context.bot.send_message(chat_id=group, text='*{}*\n\n{}'.format(each['title'], each['description']), parse_mode='Markdown')
+                alerts[each['alertId']] = each
 
-    if update.message.chat_id != owner and update.message.chat_id != group:
+
+# Info Mute
+
+with open('data/mute.json', 'r') as file:
+    muted = json.load(file)
+
+def mute(update, context):
+
+    logging.info('\\mute ' + json.dumps(context.args))
+
+    if context.args == []:
+        context.bot.send_message(owner, 'Usage: /mute [source]')
         return
-    logging.info('\\mute '+json.dumps(args))
 
-    text = ''
-    for each in args:
-        text += each
-    if text == '':
-        bot.send_message(update.message.chat_id, 'Usage: /mute [source]')
-        return
-
-    global mute_list
-    mute_list.append(text)
+    global muted
+    for each in context.args:
+        if each not in muted:
+            muted.append(each)
 
     with open('data/mute.json', 'w') as file:
-        json.dump(mute_list, file)
+        json.dump(muted, file)
 
-    bot.send_message(update.message.chat_id, 'Muted: ' + text)
+    context.bot.send_message(update.message.chat_id, 'Muted: ' + ' '.join(context.args))
 
-def unmute(bot, update, args):
+def unmute(update, context):
 
-    if update.message.chat_id != owner and update.message.chat_id != group:
-        return
-    logging.info('\\unmute '+json.dumps(args))
+    logging.info('\\unmute ' + json.dumps(context.args))
 
-    text = ''
-    for each in args:
-        text += each
-    if text == '':
-        bot.send_message(update.message.chat_id, 'Usage: /unmute [source]')
+    if context.args == []:
+        context.bot.send_message(update.message.chat_id, 'Usage: /unmute [source]')
         return
 
-    global mute_list
-    mute_list.remove(text)
+    global muted
+    for each in context.args:
+        muted.remove(each)
 
     with open('data/mute.json', 'w') as file:
-        json.dump(mute_list, file)
+        json.dump(muted, file)
 
-    bot.send_message(update.message.chat_id, 'Unmuted: ' + text)
+    context.bot.send_message(update.message.chat_id, 'Unmuted: ' + ' '.join(context.args))
 
-def setid(bot, update):
+def mute_show(update, context):
 
-    if update.message.chat_id > 0 or update.effective_user.id != owner:
-        return
-    logging.info('\\setid')
-
-    group = update.message.chat_id
-    config['BOT']['group'] = str(group)
-    update_config()
-
-def mute_show(bot, update):
-
-    if update.message.chat_id != owner and update.message.chat_id != group:
-        return
     logging.info('\\mute_list')
 
     text = 'Muted list:'
-    for each in mute_list:
+    for each in muted:
         text += '\n' + each
 
-    bot.send_message(update.message.chat_id, text)
+    context.bot.send_message(update.message.chat_id, text)
 
-w_REQUEST = False
-w_DATA = {}
 
-def weather_thu(bot, update):
+# Weather in THU
+
+WEATHER_THU_REQUEST = False
+WEATHER_THU_DATA = {}
+
+def weather_thu(update, context):
 
     logging.info('\\weather_thu {}'.format(update.message.chat_id))
 
@@ -435,31 +620,81 @@ def weather_thu(bot, update):
         return
 
     try:
-        global w_REQUEST
-        w_REQUEST = True
+        global WEATHER_THU_REQUEST
+        WEATHER_THU_REQUEST = True
         cnt = 10 * connectTimeLimit
-        while w_REQUEST:
+        while WEATHER_THU_REQUEST:
             time.sleep(0.1)
             cnt -= 1
             if cnt <= 0:
                 raise
     except:
-        bot.send_message(update.message.chat_id, 'Time out: %ds'%connectTimeLimit)
+        context.bot.send_message(update.message.chat_id, 'Time out: %ds'%connectTimeLimit)
         logging.warning('Don\'t receive any data in %ds'%connectTimeLimit)
         return
 
     logging.info('Received data')
     text = ''
-    for station in w_DATA:
+    for station in WEATHER_THU_DATA:
         if text != '':
             text += '\n'
         text += station['location'] + '\n'
         text += station['date'] + ' ' + station['time'] + '\n'
         text += '{}°C  {}%  {}m/s  {}mm\n'.format(station['temperature'], station['humidity'], station['wind_speed'], station['rainfall_10mins'])
-    bot.send_message(update.message.chat_id, text)
+    context.bot.send_message(update.message.chat_id, text)
 
-TESTSUC = 0
-connected = False
+
+# Daily report
+
+preHour = time.localtime().tm_hour
+
+def daily_report(context):
+
+    global preHour
+    hour = time.localtime().tm_hour
+    if preHour != hour:
+        preHour = hour
+        if hour == 6 or hour == 18:
+            text = daily_weather('day' if hour == 6 else 'night') + '当前状态：' + ('正常' if connectStatus else '异常')
+            context.bot.send_message(chat_id=group, text=text)
+        elif hour == 23:
+            text = 'Today Info:'
+            global today_news, sended_news
+            for source in today_news:
+                text += '\n' + ' - %s' % source
+                for news in today_news[source]:
+                    text += '\n' + '[%s](%s)' % (news['title'], news['url'])
+            today_news = {}
+            sended_news = {}
+            context.bot.send_message(chat_id=group, text=text, parse_mode='Markdown', disable_web_page_preview=True)
+
+
+# Call Police
+
+emoji = '👮🚔🚨🚓'
+
+def callpolice(update, context):
+
+    logging.info('\\callpolice {}'.format(update.message.chat_id))
+    random.seed(math.floor(time.time()))
+
+    text = ''
+    for i in range(random.randint(10, 100)):
+        text += emoji[random.randint(0, 3)]
+    context.bot.send_message(chat_id=update.message.chat_id, text=text)
+
+
+# New Message
+
+def new_message(update, context):
+    global newmsg
+    newmsg = 0
+
+
+# Connect
+
+TRANSFER_SUCC = 0
+connectStatus = False
 
 def connectSocket():
 
@@ -467,18 +702,18 @@ def connectSocket():
     mainSocket.bind((config['SERVER']['ip'], config['SERVER'].getint('port')))
     mainSocket.listen(1)
 
-    global serverSocket, connected
+    global serverSocket, connectStatus
     logging.info('Wait for connection...')
-    connected = False
+    connectStatus = False
     serverSocket,destAdr = mainSocket.accept()
     serverSocket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
     serverSocket.setsockopt(SOL_TCP, TCP_KEEPIDLE, 10)
     serverSocket.setsockopt(SOL_TCP, TCP_KEEPINTVL, 6)
     serverSocket.setsockopt(SOL_TCP, TCP_KEEPCNT, 20)
     logging.info('Connect establish!')
-    connected = True
+    connectStatus = True
 
-    global TESTSUC, info_UPDATE
+    global TRANSFER_SUCC, INFO_UPDATE
     while True:
         try:
             try:
@@ -492,33 +727,33 @@ def connectSocket():
                 except timeout:
                     raise
                 else:
-                    TESTSUC += 1
-                    if TESTSUC % 10 == 0:
-                        logging.info('TESTSUC * 10')
+                    TRANSFER_SUCC += 1
+                    if TRANSFER_SUCC % 10 == 0:
+                        logging.info('TRANSFER_SUCC * 10')
                     continue
 
             logging.info(msg)
             if msg == '':
                 raise
             if msg[0] == 'W':     # weather
-                global w_REQUEST, w_DATA
-                w_DATA = json.loads(msg[1:])
-                w_REQUEST = False
+                global WEATHER_THU_REQUEST, WEATHER_THU_DATA
+                WEATHER_THU_DATA = json.loads(msg[1:])
+                WEATHER_THU_REQUEST = False
                 serverSocket.send('S'.encode('utf8'))
-            elif msg[0] == 'R':
-                logging.info(msg)
-                global rain_UPDATE
-                if msg[1] == 'S':
-                    rain_UPDATE = +1
-                elif msg[1] == 'E':
-                    rain_UPDATE = -1
-                serverSocket.send('S'.encode('utf8'))
+            # elif msg[0] == 'R':
+            #     logging.info(msg)
+            #     global RAIN_UPDATE
+            #     if msg[1] == 'S':
+            #         RAIN_UPDATE = +1
+            #     elif msg[1] == 'E':
+            #         RAIN_UPDATE = -1
+            #     serverSocket.send('S'.encode('utf8'))
             elif msg[0] == 'I':
                 lock.acquire()
                 try:
                     global newMessages
                     newMessages.extend(json.loads(msg[1:]))
-                    info_UPDATE = True
+                    INFO_UPDATE = True
                 except Exception as e:
                     logging.error(e)
                 lock.release()
@@ -528,7 +763,7 @@ def connectSocket():
                 try:
                     global delMessages
                     delMessages.extend(json.loads(msg[1:]))
-                    info_UPDATE = True
+                    INFO_UPDATE = True
                 except Exception as e:
                     logging.error(e)
                 lock.release()
@@ -550,116 +785,50 @@ def connectSocket():
     mainSocket.close()
 
 
-def killed(bot, update):
+# Status
 
-    if update.message.chat_id != owner:
-        return
-    logging.info('\\kill')
+def status(update, context):
+    logging.info('\\status')
+    text = '当前状态：' + ('正常' if connectStatus else '异常')
+    context.bot.send_message(owner, text)
 
-    try:
-        global serverSocket
-        serverSocket.send('K'.encode('utf8'))
-        logging.info('Send request')
-    except:
-        logging.exception('Connect Error')
-        return
 
-    bot.send_message(owner, 'Killed.')
+# Error Callback
 
-preHour = time.localtime().tm_hour
+def error_callback(update, context):
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
 
-def forecast_daily(bot, job):
-
-    global preHour
-    hour = time.localtime().tm_hour
-    if preHour != hour:
-        preHour = hour
-        if hour == 6 or hour == 18:
-            text = '天气：' + caiyunData['result']['hourly']['description'] + '\n当前状态：' + ('正常' if connected else '异常')
-            bot.send_message(chat_id=group, text=text)
-        elif hour == 23:
-            text = 'Today Info:'
-            global today_news, sended_news
-            for source in today_news:
-                text += '\n' + ' - %s' % source
-                for news in today_news[source]:
-                    text += '\n' + '[%s](%s)' % (news['title'], news['url'])
-            today_news = {}
-            sended_news = {}
-            bot.send_message(chat_id=group,
-                                text=text,
-                                parse_mode='Markdown')
-
-emoji = '👮🚔🚨🚓'
-
-def callpolice(bot, update):
-
-    logging.info('\\callpolice {}'.format(update.message.chat_id))
-    random.seed(math.floor(time.time()))
-
-    text = ''
-    for i in range(random.randint(10, 100)):
-        text += emoji[random.randint(0, 3)]
-    bot.send_message(chat_id=update.message.chat_id, text=text)
-
-def precipitation_graph():
-
-    pic = 'pic/' + str(int(time.time())) + '.png'
-    logging.info('\\precipitation_graph {}'.format(pic))
-
-    if not os.path.exists('pic/'):
-        os.makedirs('pic/')
-
-    precipitation = caiyunData['result']['minutely']['precipitation_2h']
-    plt.figure()
-    plt.plot(np.arange(120), np.array(precipitation))
-    
-    plt.ylim(ymin = 0)
-    if plt.axis()[3] > 0.03:
-        plt.hlines(0.03, 0, 120, colors='skyblue', linestyles='dashed')
-    if plt.axis()[3] > 0.25:
-        plt.hlines(0.25, 0, 120, colors='blue', linestyles='dashed')
-    if plt.axis()[3] > 0.35:
-        plt.hlines(0.35, 0, 120, colors='orange', linestyles='dashed')
-    if plt.axis()[3] > 0.48:
-        plt.hlines(0.48, 0, 120, colors='darkred', linestyles='dashed')
-        
-    plt.title('precipitation in 2 hours')
-    plt.savefig(pic)
-    
-    return pic
-
-def new_message(bot, update):
-    global newmsg
-    newmsg = 0
 
 def main():
 
     if config['BOT'].getboolean('proxy'):
-        updater = Updater(config['BOT']['accesstoken'], request_kwargs={'proxy_url': config['BOT']['socks5']})
+        updater = Updater(config['BOT']['accesstoken'], use_context=True, request_kwargs={'proxy_url': config['BOT']['socks5']})
     else:
-        updater = Updater(config['BOT']['accesstoken'])
+        updater = Updater(config['BOT']['accesstoken'], use_context=True)
 
     dp = updater.dispatcher
 
-    dp.add_handler(CommandHandler('mute', mute, pass_args=True))
-    dp.add_handler(CommandHandler('unmute', unmute, pass_args=True))
-    dp.add_handler(CommandHandler('mute_list', mute_show))
-    dp.add_handler(CommandHandler('setid', setid))
-    dp.add_handler(CommandHandler('weather_thu', weather_thu))
-    dp.add_handler(CommandHandler('kill', killed))
+    f_owner = Filters.chat(owner)
+    f_group = Filters.chat(group)
+
+    dp.add_handler(CommandHandler('mute', mute, pass_args=True, filters=(f_owner|f_group)))
+    dp.add_handler(CommandHandler('unmute', unmute, pass_args=True, filters=(f_owner|f_group)))
+    dp.add_handler(CommandHandler('mute_list', mute_show, filters=(f_owner|f_group)))
     dp.add_handler(CommandHandler('forecast', forecast))
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
     dp.add_handler(CommandHandler('weather', weather))
+    dp.add_handler(CommandHandler('weather_thu', weather_thu))
+    dp.add_handler(CommandHandler('weather_today', weather_today))
     dp.add_handler(CommandHandler('callpolice', callpolice))
-    dp.add_handler(MessageHandler(Filters.text, new_message))
+    dp.add_handler(CommandHandler('status', status, filters=f_owner))
+    dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
 
     updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
-    updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
+    # updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
-    updater.job_queue.run_repeating(forecast_daily, interval=10, first=0, context=group)
+    updater.job_queue.run_repeating(daily_report, interval=10, first=0, context=group)
 
-    dp.add_error_handler(error)
+    dp.add_error_handler(error_callback)
 
     updater.start_polling()
     updater.idle()
