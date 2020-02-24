@@ -141,7 +141,7 @@ def info(context):
                     if today_news[each['source']] == []:
                         del today_news[each['source']]
 
-        newMessages = [each for each in newMessages if each['source'] not in mute_list]
+        newMessages = [each for each in newMessages if each['source'] not in muted]
 
         if newMessages != []:
             logging.info('Detected new messages: ' + str(len(newMessages)))
