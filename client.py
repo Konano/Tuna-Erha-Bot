@@ -75,7 +75,7 @@ def detect():
     global running
 
     try:
-        with open('data/postinfo.json', 'r') as file:
+        with open('/data/thu_postinfo.json', 'r') as file:
             lastMessages = json.load(file)
     except:
         lastMessages = []
@@ -146,7 +146,7 @@ def detect():
             for each in delMessages:
                 lastMessages.remove(each)
 
-        with open('data/postinfo.json', 'w') as file:
+        with open('/data/thu_postinfo.json', 'w') as file:
             json.dump(lastMessages, file)
 
         time.sleep(60)
