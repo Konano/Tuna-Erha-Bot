@@ -37,6 +37,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 owner = config['BOT'].getint('owner')
 group = config['BOT'].getint('group')
+channel = config['BOT'].getint('channel')
 
 def update_config():
     with open('config.ini', 'w') as configFile:
@@ -51,6 +52,12 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d 
                     # level=logging.INFO,
                     # filename=config['BOT']['log'])
 logger = logging.getLogger(__name__)
+
+
+# MarkdownV2 Mode
+
+def escaped(str):
+    return re.sub('([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])', '\\\\\\1', str)
 
 
 # WebVPN
@@ -141,15 +148,17 @@ def info(context):
                     if today_news[each['source']] == []:
                         del today_news[each['source']]
 
+        for each in newMessages:
+            text = 'Info %s\n[%s](%s) [(webvpn)](%s)' % (escaped(each['source']), escaped(each['title')], each['url'], webvpn(each['url']))
+            context.bot.send_message(chat_id=channel, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
+
         newMessages = [each for each in newMessages if each['source'] not in muted]
 
         if newMessages != []:
             logging.info('Detected new messages: ' + str(len(newMessages)))
             for each in newMessages:
-                msg = context.bot.send_message( chat_id=group,
-                                        text='Info %s\n[%s](%s) [(webvpn)](%s)' % (each['source'], each['title'], each['url'], webvpn(each['url'])),
-                                        parse_mode='Markdown',
-                                        disable_web_page_preview=True)
+                text = 'Info %s\n[%s](%s) [(webvpn)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url'])),
+                msg = context.bot.send_message(chat_id=group, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
                 sended_news[each['url']] = msg.message_id
     except Exception as e:
         logging.error(e)
@@ -547,7 +556,8 @@ def caiyun(context):
     if caiyunData['result']['alert']['status'] == 'ok':
         for each in caiyunData['result']['alert']['content']:
             if each['request_status'] == 'ok' and each['alertId'] not in alerts:
-                context.bot.send_message(chat_id=group, text='*{}*\n\n{}'.format(each['title'], each['description']), parse_mode='Markdown')
+                context.bot.send_message(chat_id=group,   text='*{}*\n\n{}'.format(escaped(each['title']), escaped(each['description'])), parse_mode='MarkdownV2')
+                context.bot.send_message(chat_id=channel, text='*{}*\n\n{}'.format(escaped(each['title']), escaped(each['description'])), parse_mode='MarkdownV2')
                 alerts[each['alertId']] = each
 
 
@@ -656,17 +666,18 @@ def daily_report(context):
         preHour = hour
         if hour == 6 or hour == 18:
             text = daily_weather('day' if hour == 6 else 'night') + '当前状态：' + ('正常' if connectStatus else '异常')
-            context.bot.send_message(chat_id=group, text=text)
+            context.bot.send_message(chat_id=group,   text=text)
+            context.bot.send_message(chat_id=channel, text=text)
         elif hour == 23:
             text = 'Today Info:'
             global today_news, sended_news
             for source in today_news:
-                text += '\n' + ' - %s' % source
+                text += '\n \\- %s' % escaped(source)
                 for news in today_news[source]:
-                    text += '\n' + '[%s](%s)' % (news['title'], news['url'])
+                    text += '\n[%s](%s)' % (escaped(news['title']), news['url'])
             today_news = {}
             sended_news = {}
-            context.bot.send_message(chat_id=group, text=text, parse_mode='Markdown', disable_web_page_preview=True)
+            context.bot.send_message(chat_id=group, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
 
 
 # Call Police
