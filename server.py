@@ -149,7 +149,7 @@ def info(context):
                         del today_news[each['source']]
 
         for each in newMessages:
-            text = 'Info %s\n[%s](%s) [(webvpn)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url']))
+            text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url']))
             context.bot.send_message(chat_id=channel, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
 
         newMessages = [each for each in newMessages if each['source'] not in muted]
@@ -157,7 +157,7 @@ def info(context):
         if newMessages != []:
             logging.info('Detected new messages: ' + str(len(newMessages)))
             for each in newMessages:
-                text = 'Info %s\n[%s](%s) [(webvpn)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url'])),
+                text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url'])),
                 msg = context.bot.send_message(chat_id=group, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
                 sended_news[each['url']] = msg.message_id
     except Exception as e:
