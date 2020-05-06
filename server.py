@@ -140,8 +140,9 @@ def info(context):
             logging.info('Detected del messages: ' + str(len(delMessages)))
             for each in delMessages:
                 if each['url'] in sended_news:
-                    context.bot.delete_message( chat_id=group,
-                                        message_id=sended_news[each['url']])
+                    context.bot.delete_message(
+                        chat_id=group,
+                        message_id=sended_news[each['url']])
                     del sended_news[each['url']]
                 if each['source'] in today_news and each in today_news[each['source']]:
                     today_news[each['source']].remove(each)
@@ -157,7 +158,7 @@ def info(context):
         if newMessages != []:
             logging.info('Detected new messages: ' + str(len(newMessages)))
             for each in newMessages:
-                text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url'])),
+                text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url']))
                 msg = context.bot.send_message(chat_id=group, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
                 sended_news[each['url']] = msg.message_id
     except Exception as e:
