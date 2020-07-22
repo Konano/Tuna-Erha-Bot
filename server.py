@@ -14,8 +14,8 @@ import re
 import binascii
 from Crypto.Cipher import AES
 import configparser
+from mastodon import Mastodon
 from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
-
 
 # Connect
 
@@ -42,6 +42,26 @@ channel = config['BOT'].getint('channel')
 def update_config():
     with open('config.ini', 'w') as configFile:
         config.write(configFile)
+
+
+
+# Mastodon
+
+mastodon = Mastodon(
+    client_id = config['MASTODON']['clientcred'],
+    api_base_url = config['MASTODON']['url']
+)
+
+mastodon.log_in(
+    username = config['MASTODON']['email'],
+    password = config['MASTODON']['pwd'],
+    to_file = config['MASTODON']['usercred']
+)
+
+mastodon = Mastodon(
+    access_token = config['MASTODON']['usercred'],
+    api_base_url = config['MASTODON']['url']
+)
 
 
 # Log
@@ -152,6 +172,9 @@ def info(context):
         for each in newMessages:
             text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url']))
             context.bot.send_message(chat_id=channel, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
+
+            text = '%s - %s\n校内：%s\n校外：%s' % (each['source'], each['title'], each['url'], webvpn(each['url']))
+            mastodon.toot(text)
 
         newMessages = [each for each in newMessages if each['source'] not in muted]
 
@@ -744,7 +767,7 @@ def connectSocket():
                         logging.info('TRANSFER_SUCC * 10')
                     continue
 
-            logging.info(msg)
+            # logging.info(msg)
             if msg == '':
                 raise
             if msg[0] == 'W':     # weather
