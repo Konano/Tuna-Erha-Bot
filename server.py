@@ -38,6 +38,7 @@ config.read('config.ini')
 owner = config['BOT'].getint('owner')
 group = config['BOT'].getint('group')
 channel = config['BOT'].getint('channel')
+pipe = config['BOT'].getint('pipe')
 
 def update_config():
     with open('config.ini', 'w') as configFile:
@@ -52,6 +53,31 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d 
                     # level=logging.INFO,
                     # filename=config['BOT']['log'])
 logger = logging.getLogger(__name__)
+
+
+def help(update, context):
+    logging.info('\\help')
+    text = '''
+可用：
+
+/weather - 显示当前位置的天气（彩云）
+/forecast - 降雨分钟级预报
+/forecast_hourly - 天气小时级预报
+/mute - 屏蔽发布源
+/unmute - 解除屏蔽发布源
+/mute_list - 列出所有被屏蔽的发布源
+/roll - 从 1 开始的随机数
+/callpolice - 在线报警
+/status - Bot 连接状态
+/help - 可用指令说明
+
+废弃：
+
+/libseat - 查看文图座位剩余情况
+/weather_thu - 显示学校区域当前的天气（学校天气站）
+/weather_today - 显示当前位置的今日天气预报（彩云）
+'''
+    context.bot.send_message(owner, text)
 
 
 # MarkdownV2 Mode
@@ -111,6 +137,16 @@ def webvpn(url):
     return url
 
 
+def roll(update, context):
+
+    logging.info('\\roll ' + json.dumps(context.args))
+
+    try:
+        random.seed(math.floor(time.time()))
+        context.bot.send_message(owner, 'Choose: '+str(random.randint(1,int(context.args[0]))))
+    except:
+        context.bot.send_message(owner, 'Usage: /roll [total]')
+
 # Info
 
 lock = Lock()
@@ -119,55 +155,84 @@ delMessages = []
 INFO_UPDATE = False
 today_news = {}
 sended_news = {}
+urls = {}
 
-def info(context):
-
-    global newMessages, delMessages, INFO_UPDATE, today_news, sended_news
-
-    if INFO_UPDATE == False:
-        return
-    INFO_UPDATE = False
-
-    lock.acquire()
+def info(update, context):
 
     try:
-        for each in newMessages:
-            if each['source'] not in today_news:
-                today_news[each['source']] = []
-            today_news[each['source']].append(each)
-
-        if delMessages != []:
-            logging.info('Detected del messages: ' + str(len(delMessages)))
-            for each in delMessages:
-                if each['url'] in sended_news:
-                    context.bot.delete_message(
-                        chat_id=group,
-                        message_id=sended_news[each['url']])
-                    del sended_news[each['url']]
-                if each['source'] in today_news and each in today_news[each['source']]:
-                    today_news[each['source']].remove(each)
-                    if today_news[each['source']] == []:
-                        del today_news[each['source']]
-
-        for each in newMessages:
-            text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url']))
-            context.bot.send_message(chat_id=channel, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
-
-        newMessages = [each for each in newMessages if each['source'] not in muted]
-
-        if newMessages != []:
-            logging.info('Detected new messages: ' + str(len(newMessages)))
-            for each in newMessages:
-                text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url']))
+        rev = json.loads(update.channel_post.text)
+        logging.info(rev)
+        data = rev['data']
+        if rev['type'] == 'newinfo':
+            urls[data['url']] = data
+            if data['source'] not in today_news:
+                today_news[data['source']] = []
+            today_news[data['source']].append(data)
+            if data['source'] not in muted:
+                text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(data['source']), escaped(data['title']), data['url'], webvpn(data['url']))
                 msg = context.bot.send_message(chat_id=group, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
-                sended_news[each['url']] = msg.message_id
+                sended_news[data['url']] = msg.message_id
+
+        elif rev['type'] == 'delinfo':
+            if data in sended_news:
+                context.bot.delete_message(chat_id=group, message_id=sended_news[data])
+                del sended_news[data]
+            if data in url.keys() and url['data']['source'] in today_news and url['data'] in today_news[each['source']]:
+                today_news[url['data']['source']].remove(url['data'])
+                if today_news[url['data']['source']] == []:
+                    del today_news[url['data']['source']]
+
     except Exception as e:
         logging.error(e)
-        
-    newMessages = []
-    delMessages = []
 
-    lock.release()
+# def info(context):
+
+#     global newMessages, delMessages, INFO_UPDATE, today_news, sended_news
+
+#     if INFO_UPDATE == False:
+#         return
+#     INFO_UPDATE = False
+
+#     lock.acquire()
+
+#     try:
+#         for each in newMessages:
+#             if each['source'] not in today_news:
+#                 today_news[each['source']] = []
+#             today_news[each['source']].append(each)
+
+#         if delMessages != []:
+#             logging.info('Detected del messages: ' + str(len(delMessages)))
+#             for each in delMessages:
+#                 if each['url'] in sended_news:
+#                     context.bot.delete_message(
+#                         chat_id=group,
+#                         message_id=sended_news[each['url']])
+#                     del sended_news[each['url']]
+#                 if each['source'] in today_news and each in today_news[each['source']]:
+#                     today_news[each['source']].remove(each)
+#                     if today_news[each['source']] == []:
+#                         del today_news[each['source']]
+
+#         # for each in newMessages:
+#         #     text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url']))
+#         #     context.bot.send_message(chat_id=channel, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
+
+#         newMessages = [each for each in newMessages if each['source'] not in muted]
+
+#         if newMessages != []:
+#             logging.info('Detected new messages: ' + str(len(newMessages)))
+#             for each in newMessages:
+#                 text = 'Info %s\n[%s](%s) [\\(webvpn\\)](%s)' % (escaped(each['source']), escaped(each['title']), each['url'], webvpn(each['url']))
+#                 msg = context.bot.send_message(chat_id=group, text=text, parse_mode='MarkdownV2', disable_web_page_preview=True)
+#                 sended_news[each['url']] = msg.message_id
+#     except Exception as e:
+#         logging.error(e)
+        
+#     newMessages = []
+#     delMessages = []
+
+#     lock.release()
 
 
 """
@@ -397,27 +462,27 @@ def daily_weather(dayornight):
             'AQI：{}\n'.format(caiyun_aqi_avg()) + \
             ('现挂预警信号：{}\n'.format(' '.join(alert_now())) if alert_now() != [] else '')
 
-def weather_today(update, context):
+# def weather_today(update, context):
 
-    logging.info('\\weather_today')
+#     logging.info('\\weather_today')
 
-    assert caiyunData['result']['hourly']['status'] == 'ok'
-    assert caiyunData['result']['daily']['status'] == 'ok'
+#     assert caiyunData['result']['hourly']['status'] == 'ok'
+#     assert caiyunData['result']['daily']['status'] == 'ok'
 
-    text = \
-        '清华今日天气：{}\n'.format(caiyunData['result']['hourly']['description']) + \
-        '温度：{}~{}℃\n'.format(caiyunData['result']['daily']['temperature'][0]['min'], caiyunData['result']['daily']['temperature'][0]['max']) + \
-        '湿度：{}%\n'.format(int(float(caiyunData['result']['daily']['humidity'][0]['avg'])*100)) + \
-        '风速：{}m/s ({})\n'.format(caiyunData['result']['daily']['wind'][0]["avg"]['speed'], level_windspeed(caiyunData['result']['daily']['wind'][0]["avg"]['speed'])) + \
-        '能见度：{}km\n'.format(caiyunData['result']['daily']['visibility'][0]['avg']) + \
-        '日出：{}\n'.format(caiyunData['result']['daily']['astro'][0]['sunrise']['time']) + \
-        '日落：{}\n'.format(caiyunData['result']['daily']['astro'][0]['sunset']['time']) + \
-        'AQI：{}\n'.format(caiyunData['result']['daily']['air_quality']['aqi'][0]['avg']['chn']) + \
-        '紫外线：{}\n'.format(caiyunData['result']['daily']['life_index']['ultraviolet'][0]['desc']) + \
-        '舒适度：{}\n'.format(caiyunData['result']['daily']['life_index']['comfort'][0]['desc']) + \
-        ('现挂预警信号：{}\n'.format(' '.join(alert_now())) if alert_now() != [] else '')
+#     text = \
+#         '清华今日天气：{}\n'.format(caiyunData['result']['hourly']['description']) + \
+#         '温度：{}~{}℃\n'.format(caiyunData['result']['daily']['temperature'][0]['min'], caiyunData['result']['daily']['temperature'][0]['max']) + \
+#         '湿度：{}%\n'.format(int(float(caiyunData['result']['daily']['humidity'][0]['avg'])*100)) + \
+#         '风速：{}m/s ({})\n'.format(caiyunData['result']['daily']['wind'][0]["avg"]['speed'], level_windspeed(caiyunData['result']['daily']['wind'][0]["avg"]['speed'])) + \
+#         '能见度：{}km\n'.format(caiyunData['result']['daily']['visibility'][0]['avg']) + \
+#         '日出：{}\n'.format(caiyunData['result']['daily']['astro'][0]['sunrise']['time']) + \
+#         '日落：{}\n'.format(caiyunData['result']['daily']['astro'][0]['sunset']['time']) + \
+#         'AQI：{}\n'.format(caiyunData['result']['daily']['air_quality']['aqi'][0]['avg']['chn']) + \
+#         '紫外线：{}\n'.format(caiyunData['result']['daily']['life_index']['ultraviolet'][0]['desc']) + \
+#         '舒适度：{}\n'.format(caiyunData['result']['daily']['life_index']['comfort'][0]['desc']) + \
+#         ('现挂预警信号：{}\n'.format(' '.join(alert_now())) if alert_now() != [] else '')
 
-    context.bot.send_message(chat_id=update.message.chat_id, text=text)
+#     context.bot.send_message(chat_id=update.message.chat_id, text=text)
 
 def precipitation_graph():
 
@@ -615,44 +680,44 @@ def mute_show(update, context):
 
 # Weather in THU
 
-WEATHER_THU_REQUEST = False
-WEATHER_THU_DATA = {}
+# WEATHER_THU_REQUEST = False
+# WEATHER_THU_DATA = {}
 
-def weather_thu(update, context):
+# def weather_thu(update, context):
 
-    logging.info('\\weather_thu {}'.format(update.message.chat_id))
+#     logging.info('\\weather_thu {}'.format(update.message.chat_id))
 
-    try:
-        global serverSocket
-        serverSocket.send('W'.encode('utf8'))
-        logging.info('Send request')
-    except:
-        logging.exception('Connect Error')
-        return
+#     try:
+#         global serverSocket
+#         serverSocket.send('W'.encode('utf8'))
+#         logging.info('Send request')
+#     except:
+#         logging.exception('Connect Error')
+#         return
 
-    try:
-        global WEATHER_THU_REQUEST
-        WEATHER_THU_REQUEST = True
-        cnt = 10 * connectTimeLimit
-        while WEATHER_THU_REQUEST:
-            time.sleep(0.1)
-            cnt -= 1
-            if cnt <= 0:
-                raise
-    except:
-        context.bot.send_message(update.message.chat_id, 'Time out: %ds'%connectTimeLimit)
-        logging.warning('Don\'t receive any data in %ds'%connectTimeLimit)
-        return
+#     try:
+#         global WEATHER_THU_REQUEST
+#         WEATHER_THU_REQUEST = True
+#         cnt = 10 * connectTimeLimit
+#         while WEATHER_THU_REQUEST:
+#             time.sleep(0.1)
+#             cnt -= 1
+#             if cnt <= 0:
+#                 raise
+#     except:
+#         context.bot.send_message(update.message.chat_id, 'Time out: %ds'%connectTimeLimit)
+#         logging.warning('Don\'t receive any data in %ds'%connectTimeLimit)
+#         return
 
-    logging.info('Received data')
-    text = ''
-    for station in WEATHER_THU_DATA:
-        if text != '':
-            text += '\n'
-        text += station['location'] + '\n'
-        text += station['date'] + ' ' + station['time'] + '\n'
-        text += '{}℃  {}%  {}m/s  {}mm\n'.format(station['temperature'], station['humidity'], station['wind_speed'], station['rainfall_10mins'])
-    context.bot.send_message(update.message.chat_id, text)
+#     logging.info('Received data')
+#     text = ''
+#     for station in WEATHER_THU_DATA:
+#         if text != '':
+#             text += '\n'
+#         text += station['location'] + '\n'
+#         text += station['date'] + ' ' + station['time'] + '\n'
+#         text += '{}℃  {}%  {}m/s  {}mm\n'.format(station['temperature'], station['humidity'], station['wind_speed'], station['rainfall_10mins'])
+#     context.bot.send_message(update.message.chat_id, text)
 
 
 # Daily report
@@ -706,7 +771,7 @@ def new_message(update, context):
 # Connect
 
 TRANSFER_SUCC = 0
-connectStatus = False
+connectStatus = True # FIXME connectStatus should be False
 
 def connectSocket():
 
@@ -822,6 +887,7 @@ def main():
 
     f_owner = Filters.chat(owner)
     f_group = Filters.chat(group)
+    f_pipe = Filters.chat(pipe)
 
     dp.add_handler(CommandHandler('mute', mute, pass_args=True, filters=(f_owner|f_group)))
     dp.add_handler(CommandHandler('unmute', unmute, pass_args=True, filters=(f_owner|f_group)))
@@ -829,13 +895,17 @@ def main():
     dp.add_handler(CommandHandler('forecast', forecast))
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
     dp.add_handler(CommandHandler('weather', weather))
-    dp.add_handler(CommandHandler('weather_thu', weather_thu))
-    dp.add_handler(CommandHandler('weather_today', weather_today))
+    dp.add_handler(CommandHandler('roll', roll, pass_args=True))
+    # dp.add_handler(CommandHandler('weather_thu', weather_thu))
+    # dp.add_handler(CommandHandler('weather_today', weather_today))
     dp.add_handler(CommandHandler('callpolice', callpolice))
     dp.add_handler(CommandHandler('status', status, filters=f_owner))
-    dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
+    dp.add_handler(CommandHandler('help', help, filters=f_owner))
 
-    updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
+    dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
+    dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
+
+    # updater.job_queue.run_repeating(info, interval=10, first=0, context=group)
     # updater.job_queue.run_repeating(rain_thu, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
     updater.job_queue.run_repeating(daily_report, interval=10, first=0, context=group)
@@ -847,6 +917,6 @@ def main():
 
 
 if __name__ == '__main__':
-    connect = Thread(target=connectSocket)
-    connect.start()
+    # connect = Thread(target=connectSocket)
+    # connect.start()
     main()
