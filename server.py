@@ -162,7 +162,7 @@ def info(update, context):
     try:
         rev = json.loads(update.channel_post.text)
         logging.info(rev)
-        data = rev['data']
+        data = rev[data]
         if rev['type'] == 'newinfo':
             urls[data['url']] = data
             if data['source'] not in today_news:
@@ -177,10 +177,10 @@ def info(update, context):
             if data in sended_news:
                 context.bot.delete_message(chat_id=group, message_id=sended_news[data])
                 del sended_news[data]
-            if data in url.keys() and url['data']['source'] in today_news and url['data'] in today_news[each['source']]:
-                today_news[url['data']['source']].remove(url['data'])
-                if today_news[url['data']['source']] == []:
-                    del today_news[url['data']['source']]
+            if data in urls.keys() and urls[data]['source'] in today_news and urls[data] in today_news[each['source']]:
+                today_news[urls[data]['source']].remove(urls[data])
+                if today_news[urls[data]['source']] == []:
+                    del today_news[urls[data]['source']]
 
     except Exception as e:
         logging.error(e)
