@@ -569,7 +569,11 @@ def forecast_rain(bot):
     if max(probability_2h) > start_probability and rain_2h == False:
         rain_2h = True
         if newmsg > 0:
-            bot.edit_message_text(chat_id=group, text='未来两小时内可能会下雨。', message_id=newmsg)
+            try:
+                bot.edit_message_text(chat_id=group, text='未来两小时内可能会下雨。', message_id=newmsg)
+            except Exception as e:
+                logging.error(e)
+                newmsg = bot.send_message(chat_id=group, text='未来两小时内可能会下雨。').message_id
         else:
             newmsg = bot.send_message(chat_id=group, text='未来两小时内可能会下雨。').message_id
         logging.info('rain_2h F to T')
