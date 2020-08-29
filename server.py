@@ -139,13 +139,13 @@ def webvpn(url):
 
 def roll(update, context):
 
-    logging.info('\\roll ' + json.dumps(context.args))
+    logging.info('\\roll {} '.format(update.message.chat_id) + json.dumps(context.args))
 
     try:
         random.seed(math.floor(time.time()))
-        context.bot.send_message(owner, 'Choose: '+str(random.randint(1,int(context.args[0]))))
+        context.bot.send_message(update.message.chat_id, 'Choose: '+str(random.randint(1,int(context.args[0]))))
     except:
-        context.bot.send_message(owner, 'Usage: /roll [total]')
+        context.bot.send_message(update.message.chat_id, 'Usage: /roll [total]')
 
 # Info
 
