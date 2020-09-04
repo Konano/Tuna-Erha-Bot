@@ -109,4 +109,4 @@ def rainfall(URL):
 
 def request(URL):
 
-    return requests.get(URL).content.decode('utf-8')
+    return requests.get(URL, timeout=(5,10)).content.decode('utf-8')

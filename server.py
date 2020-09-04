@@ -14,6 +14,7 @@ import re
 import binascii
 from Crypto.Cipher import AES
 import configparser
+import requests
 from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
 
 
@@ -146,6 +147,22 @@ def roll(update, context):
         context.bot.send_message(update.message.chat_id, 'Choose: '+str(random.randint(1,int(context.args[0]))))
     except:
         context.bot.send_message(update.message.chat_id, 'Usage: /roll [total]')
+
+
+def washer(update, context):
+
+    logging.info('\\washer {} '.format(update.message.chat_id) + json.dumps(context.args))
+
+    try:
+        if len(context.args) == 0:
+            result = crawler.request('https://washer.zenithal.workers.dev/?s=%E7%B4%AB%E8%8D%862%E5%8F%B7%E6%A5%BC')
+        else:
+            result = crawler.request('https://washer.zenithal.workers.dev/?s=%E7%B4%AB%E8%8D%862%E5%8F%B7%E6%A5%BC{}%E5%B1%82'.format(context.args[0]))
+        context.bot.send_message(update.message.chat_id, result.replace('清华大学紫荆2号楼', '').replace('4G', '').replace('</div><div>','\n').replace('<html><body><div>', '').replace('</div></body></html>', ''))
+    except requests.exceptions.RequestException:
+        context.bot.send_message(update.message.chat_id, 'Network error.')
+    except Exception:
+        context.bot.send_message(update.message.chat_id, 'Usage: /washer [floor]')
 
 # Info
 
@@ -900,6 +917,7 @@ def main():
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
     dp.add_handler(CommandHandler('weather', weather))
     dp.add_handler(CommandHandler('roll', roll, pass_args=True))
+    dp.add_handler(CommandHandler('washer', washer, pass_args=True))
     # dp.add_handler(CommandHandler('weather_thu', weather_thu))
     # dp.add_handler(CommandHandler('weather_today', weather_today))
     dp.add_handler(CommandHandler('callpolice', callpolice))
