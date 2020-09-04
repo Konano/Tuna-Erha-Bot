@@ -70,6 +70,7 @@ def help(update, context):
 /roll - 从 1 开始的随机数
 /callpolice - 在线报警
 /status - Bot 连接状态
+/washer - 洗衣机在线状态
 /help - 可用指令说明
 
 废弃：
