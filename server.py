@@ -71,6 +71,7 @@ def help(update, context):
 /callpolice - 在线报警
 /status - Bot 连接状态
 /washer - 洗衣机在线状态
+/echo - 回显消息到群
 /help - 可用指令说明
 
 废弃：
@@ -80,6 +81,11 @@ def help(update, context):
 /weather_today - 显示当前位置的今日天气预报（彩云）
 '''
     context.bot.send_message(owner, text)
+
+
+def echo(update, context):
+    logging.info('\\echo {}'.format(' '.join(context.args)))
+    context.bot.send_message(group, ' '.join(context.args))
 
 
 # MarkdownV2 Mode
@@ -150,20 +156,49 @@ def roll(update, context):
         context.bot.send_message(update.message.chat_id, 'Usage: /roll [total]')
 
 
+def washer_status(obj):
+    status_str = obj['washerName'] + '：'
+    if obj['runingStatus'] != 48:
+        status_str += '运行中...'
+        status_str += '剩余' + str(obj['remainRunning']) + '分钟'
+    else:
+        status_str += '空闲！'
+    return status_str
+
+
+def get_washer(strs):
+    cookies = {'mopenid': 'omELuw9a0cWYS0nNOk5i3lxim_cY'}
+    try:
+        res = requests.get('https://hisun.cleverschool.cn/washWeChat/member/washer/list?regionId=3&pageSize=600&pageNo=1', cookies=cookies, timeout=(5,10))
+    except requests.exceptions.RequestException:
+        return '网络错误。'
+    ret = json.loads(res.content.decode('utf-8'))['result']
+    rpc = [('紫金公寓','紫荆'),('紫荊','紫荆'),('紫荆公寓','紫荆'),('4G',''),('三号院','3号院'),('七号楼','7号楼'),('紫荆1号楼1号机','紫荆1号楼1层1号机'),('紫荆1号楼4号机','紫荆1号楼1层4号机'),('清华大学',''),('层3号楼','层3号机'),('层4号楼','层4号机')]
+    reply = []
+    for i in range(len(ret)):
+        for c in rpc:
+            ret[i]['washerName'] = ret[i]['washerName'].replace(c[0], c[1])
+        if min([ret[i]['washerName'].find(s) for s in strs]) != -1:
+            reply.append(washer_status(ret[i]))
+    if reply == []:
+        return '查询无结果，请检查参数是否正确。'
+    elif len(reply) > 20:
+        reply.sort()
+        return '\n'.join(reply[:20]) + '\n...'
+    else:
+        reply.sort()
+        return '\n'.join(reply)
+
 def washer(update, context):
 
     logging.info('\\washer {} '.format(update.message.chat_id) + json.dumps(context.args))
 
-    try:
-        if len(context.args) == 0:
-            result = crawler.request('https://washer.zenithal.workers.dev/?s=%E7%B4%AB%E8%8D%862%E5%8F%B7%E6%A5%BC')
-        else:
-            result = crawler.request('https://washer.zenithal.workers.dev/?s=%E7%B4%AB%E8%8D%862%E5%8F%B7%E6%A5%BC{}%E5%B1%82'.format(context.args[0]))
-        context.bot.send_message(update.message.chat_id, result.replace('清华大学紫荆2号楼', '').replace('4G', '').replace('</div><div>','\n').replace('<html><body><div>', '').replace('</div></body></html>', ''))
-    except requests.exceptions.RequestException:
-        context.bot.send_message(update.message.chat_id, 'Network error.')
-    except Exception:
-        context.bot.send_message(update.message.chat_id, 'Usage: /washer [floor]')
+    if len(context.args) == 0:
+        args = ['紫荆2号楼']
+    else:
+        args = context.args
+
+    context.bot.send_message(update.message.chat_id, get_washer(args))
 
 # Info
 
@@ -924,6 +959,7 @@ def main():
     dp.add_handler(CommandHandler('callpolice', callpolice))
     dp.add_handler(CommandHandler('status', status, filters=f_owner))
     dp.add_handler(CommandHandler('help', help, filters=f_owner))
+    dp.add_handler(CommandHandler('echo', echo, filters=f_owner))
 
     dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
