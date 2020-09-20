@@ -1,8 +1,6 @@
-# Tuna BetaCat Bot
+# Tuna Erha Bot
 
-BetaCat-Bot Tuna 特供版
-
-（本来想重构下代码结构，结果看代码也就 800+ 行，就不了）
+Erha-Bot Tuna 特供版
 
 ## 目前指令
 
