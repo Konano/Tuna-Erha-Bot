@@ -19,10 +19,10 @@ def detect(URL):
 
     for each in content:
         tmp = re.split('\xa0\xa0|\t\n', each.get_text().strip())
-        messages.append({'title' : tmp[0],
+        messages.append({'title': tmp[0],
                          'source': tmp[1][1:-1],
-                         'data'  : tmp[2],
-                         'url'   : each.find('a').get('href')})
+                         'data': tmp[2],
+                         'url': each.find('a').get('href')})
 
     return messages
 
@@ -36,9 +36,9 @@ def detectBoard(URL):
     messages = []
 
     for each in content:
-        messages.append({'title' : each.get('title'),
+        messages.append({'title': each.get('title'),
                          'source': '重要公告',
-                         'url'   : each.get('href')})
+                         'url': each.get('href')})
 
     return messages
 
@@ -52,12 +52,11 @@ def detectLibrary(URL):
     messages = []
 
     for each in content:
-        messages.append({'title' : each.get_text(),
+        messages.append({'title': each.get_text(),
                          'source': '图书馆公告',
-                         'url'   : 'http://lib.tsinghua.edu.cn'+each.get('href')})
+                         'url': 'http://lib.tsinghua.edu.cn'+each.get('href')})
 
     return messages
-
 
 
 def libseat(URL):
@@ -68,12 +67,14 @@ def libseat(URL):
     result = []
 
     for each in content[3:-1]:
-        result.append({'name'  : each.select('td')[0].get_text(),
-                       'used'  : each.select('td')[1].get_text(),
+        result.append({'name': each.select('td')[0].get_text(),
+                       'used': each.select('td')[1].get_text(),
                        'remain': each.select('td')[2].get_text()})
     return result
 
+
 stationList = [2, 3, 4, 5, 7]
+
 
 def weather(URL):
     html = requests.get(URL).content
@@ -83,17 +84,18 @@ def weather(URL):
 
     for station in bs.select('table'):
         if int(station.select('p')[0].get_text().split(' ')[0][0]) in stationList:
-            result.append({'ID'              : station.select('p')[0].get_text().split(' ')[0][0],
-                           'location'        : station.select('p')[0].get_text().split(' ')[1],
-                           'date'            : station.select('p')[0].get_text().split(' ')[3],
-                           'time'            : station.select('p')[0].get_text().split(' ')[4],
-                           'temperature'     : station.select('tr')[1].select('td')[1].get_text(),
-                           'wind_direction'  : station.select('tr')[1].select('td')[3].get_text(),
-                           'humidity'        : station.select('tr')[2].select('td')[1].get_text(),
-                           'wind_speed'      : station.select('tr')[2].select('td')[3].get_text(),
-                           'rainfall_10mins' : station.select('tr')[3].select('td')[1].get_text(),
-                           'hPa'             : station.select('tr')[3].select('td')[3].get_text()})
+            result.append({'ID': station.select('p')[0].get_text().split(' ')[0][0],
+                           'location': station.select('p')[0].get_text().split(' ')[1],
+                           'date': station.select('p')[0].get_text().split(' ')[3],
+                           'time': station.select('p')[0].get_text().split(' ')[4],
+                           'temperature': station.select('tr')[1].select('td')[1].get_text(),
+                           'wind_direction': station.select('tr')[1].select('td')[3].get_text(),
+                           'humidity': station.select('tr')[2].select('td')[1].get_text(),
+                           'wind_speed': station.select('tr')[2].select('td')[3].get_text(),
+                           'rainfall_10mins': station.select('tr')[3].select('td')[1].get_text(),
+                           'hPa': station.select('tr')[3].select('td')[3].get_text()})
     return result
+
 
 def rainfall(URL):
     html = requests.get(URL).content
@@ -103,10 +105,12 @@ def rainfall(URL):
 
     for station in bs.select('table'):
         if int(station.select('p')[0].get_text().split(' ')[0][0]) in stationList:
-            maxRainfall = max(maxRainfall, float(station.select('tr')[3].select('td')[1].get_text()))
+            maxRainfall = max(maxRainfall, float(
+                station.select('tr')[3].select('td')[1].get_text()))
 
     return maxRainfall
 
+
 def request(URL):
 
-    return requests.get(URL, timeout=(5,10)).content.decode('utf-8')
+    return requests.get(URL, timeout=(5, 10)).content.decode('utf-8')
