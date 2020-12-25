@@ -1,6 +1,7 @@
-requests==2.22.0
-numpy==1.17.0
+requests
+numpy
 python-telegram-bot==13.0
-matplotlib==1.5.1
-beautifulsoup4==4.7.1
-pycryptodome==3.9.4
+matplotlib
+beautifulsoup4
+pycryptodome
+colorlog
