@@ -6,7 +6,7 @@ from utils.caiyun import caiyun
 from commands.daily import daily_report
 from commands.washer import washer
 from commands.info import info
-from commands.gadget import echo, roll, callpolice, new_message, error_callback
+from commands.gadget import echo, roll, callpolice, new_message, error_callback, register
 from commands.weather import forecast, forecast_hourly, weather
 from commands.heartbeat import sendHeartbeat
 
@@ -24,7 +24,7 @@ def help(update, context):
 /roll - 从 1 开始的随机数
 /callpolice - 在线报警
 /washer - 洗衣机在线状态
-/echo - 回显消息到群
+/register - 一键注册防止失学
 /help - 可用指令说明
 
 废弃：
@@ -60,8 +60,9 @@ def main():
     dp.add_handler(CommandHandler('roll', roll, pass_args=True))
     dp.add_handler(CommandHandler('washer', washer, pass_args=True))
     dp.add_handler(CommandHandler('callpolice', callpolice))
-    dp.add_handler(CommandHandler('help', help, filters=f_owner))
+    dp.add_handler(CommandHandler('help', help))
     dp.add_handler(CommandHandler('echo', echo, filters=f_owner))
+    dp.add_handler(CommandHandler('register', register, pass_args=True))
 
     dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))

@@ -16,8 +16,9 @@ Erha-Bot Tuna 特供版
 - /callpolice - 在线报警
 - /status - Bot 连接状态
 - /washer - 洗衣机在线状态
-- /echo - 回显消息到群
+- /register - 一键注册防止失学
 - /help - 可用指令说明
+- /echo - 回显消息到群 (admin)
 
 废弃：
 

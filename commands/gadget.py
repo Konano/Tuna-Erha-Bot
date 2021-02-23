@@ -2,6 +2,12 @@ import json
 import random
 import math
 import time
+import re
+import os
+import qrcode
+from PIL import Image
+import numpy as np
+import traceback
 
 from utils.log import logger
 from utils.config import group
@@ -47,3 +53,59 @@ def callpolice(update, context):
     for _ in range(random.randint(10, 100)):
         text += emoji[random.randint(0, 3)]
     context.bot.send_message(chat_id=update.message.chat_id, text=text)
+
+
+dig = np.array([
+    [1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1],
+    [1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1],
+    [1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+    [1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0],
+    [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1],
+    [0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1],
+    [1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1],
+    [1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+]) * 255
+
+
+def generator_register(id, tm):
+
+    try:
+        pic = f'pic/{id}_{tm}.png'
+        if not os.path.exists(pic):
+            tmp = f'pic/{int(time.time())}.png'
+            qrcode.make(id).save(tmp)
+            bg = np.array(Image.open('template/template.jpg').convert('L'))
+            tmp = np.array(Image.open(tmp).convert('L'))[40:-45, 40:-45]
+            tmp = np.array(Image.fromarray(tmp).resize((41, 41)))
+            bg[14:55, 25:66] = tmp
+            points = [29, 35, 41, 47, 53, 59]
+            edit = [int(_) for _ in tm]
+            for i in range(6):
+                x, y, d = 55, points[i], edit[i]
+                bg[x:x+7, y:y+4] = dig[d].reshape(7, 4)
+            Image.fromarray(bg).save(pic)
+        return pic
+    except Exception as e:
+        logger.debug(traceback.format_exc())
+        logger.error(e)
+
+
+def register(update, context):
+
+    logger.info(
+        f'\\register {update.message.chat_id} {json.dumps(context.args)}')
+
+    try:
+        assert len(context.args) == 2
+        assert len(re.findall(r'^\d{10}$', context.args[0])) == 1
+        assert len(re.findall(r'^\d{6}$', context.args[1])) == 1
+
+        pic = generator_register(context.args[0], context.args[1])
+        context.bot.send_photo(
+            chat_id=update.message.chat_id, photo=open(pic, 'rb'))
+
+    except:
+        context.bot.send_message(
+            update.message.chat_id, 'Usage: /register [StudentID] [Month]\nExample: /register 1994990239 202102')

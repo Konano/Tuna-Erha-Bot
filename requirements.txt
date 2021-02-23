@@ -5,3 +5,4 @@ matplotlib
 beautifulsoup4
 pycryptodome
 colorlog
+qrcode
