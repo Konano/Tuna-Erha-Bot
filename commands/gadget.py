@@ -109,3 +109,24 @@ def register(update, context):
     except:
         context.bot.send_message(
             update.message.chat_id, 'Usage: /register [StudentID] [Month]\nExample: /register 1994990239 202102')
+
+
+hitcount = 0
+hitchatid = {}
+
+def hitreds(update, context):
+    global hitcount
+    hitcount += 1
+    if update.message.chat_id not in hitchatid.keys():
+        hitchatid[update.message.chat_id] = 0
+    hitchatid[update.message.chat_id] += 1
+    context.bot.send_message(update.message.chat_id, f'今日打红人 ({hitcount}/1)', reply_to_message_id=update.message.message_id)
+
+
+def hitreds_init(context):
+    global hitcount, hitchatid
+    for chatid in hitchatid.keys():
+        group_or_chat = '本群' if chatid < 0 else '您'
+        context.bot.send_message(chatid, f'红人昨日被打次数: {hitcount}\n{group_or_chat}昨日打红人次数: {hitchatid[chatid]}\n红人 @ZenithalH 万分感谢您的支持！')
+    hitcount = 0
+    hitchatid = {}

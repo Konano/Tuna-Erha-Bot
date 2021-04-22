@@ -6,9 +6,10 @@ from utils.caiyun import caiyun
 from commands.daily import daily_report
 from commands.washer import washer
 from commands.info import info
-from commands.gadget import echo, roll, callpolice, new_message, error_callback, register
+from commands.gadget import echo, roll, callpolice, new_message, error_callback, register, hitreds, hitreds_init
 from commands.weather import forecast, forecast_hourly, weather
 from commands.heartbeat import sendHeartbeat
+import datetime, pytz
 
 def help(update, context):
     logger.info('\\help')
@@ -63,6 +64,7 @@ def main():
     dp.add_handler(CommandHandler('help', help))
     dp.add_handler(CommandHandler('echo', echo, filters=f_owner))
     dp.add_handler(CommandHandler('register', register, pass_args=True))
+    dp.add_handler(CommandHandler('hitreds', hitreds))
 
     dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
@@ -70,6 +72,7 @@ def main():
     updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
     updater.job_queue.run_repeating(daily_report, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(sendHeartbeat, interval=60, first=0)
+    updater.job_queue.run_daily(hitreds_init, time=datetime.time(hour=0, minute=0, tzinfo=pytz.timezone('Asia/Shanghai')))
 
     dp.add_error_handler(error_callback)
 
