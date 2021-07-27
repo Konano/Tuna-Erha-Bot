@@ -7,6 +7,7 @@ group = config['BOT'].getint('group')
 channel = config['BOT'].getint('channel')
 pipe = config['BOT'].getint('pipe')
 heartbeatURL = config['BOT']['heartbeat']
+mopenid = config['BOT']['mopenid']
 
 
 def update_config():

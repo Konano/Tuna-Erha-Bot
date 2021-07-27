@@ -2,6 +2,7 @@ import requests
 import json
 
 from utils.log import logger
+from utils.config import mopenid
 
 
 def washer_status(obj):
@@ -15,7 +16,7 @@ def washer_status(obj):
 
 
 def get_washer(strs):
-    cookies = {'mopenid': 'omELuw9a0cWYS0nNOk5i3lxim_cY'}
+    cookies = {'mopenid': mopenid}
     try:
         res = requests.get(
             'https://hisun.cleverschool.cn/washWeChat/member/washer/list?regionId=3&pageSize=600&pageNo=1', cookies=cookies, timeout=(5, 10))
