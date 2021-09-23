@@ -73,7 +73,7 @@ def main():
     updater.job_queue.run_repeating(sendHeartbeat, interval=60, first=0)
     updater.job_queue.run_daily(hitreds_init, time=datetime.time(hour=0, minute=0, tzinfo=pytz.timezone('Asia/Shanghai')))
 
-    updater.start_webhook(listen='0.0.0.0', port=webhook['port'], url_path=webhook['token'], cert=webhook['cert'], webhook_url=f'https://{webhook["url"]}:8443/{webhook["token"]}')
+    updater.start_webhook(listen=webhook['listen'], port=webhook['port'], url_path=webhook['token'], cert=webhook['cert'], webhook_url=f'https://{webhook["url"]}:8443/{webhook["token"]}')
     logger.info('bot start')
     updater.idle()
 
