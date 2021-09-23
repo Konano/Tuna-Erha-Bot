@@ -38,7 +38,7 @@ def error_callback(update, context):
 
 
 def new_message(update, context):
-    cy.newmsg = 0
+    cy.update_newmsg(0)
 
 
 emoji = '👮🚔🚨🚓'

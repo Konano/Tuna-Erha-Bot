@@ -11,7 +11,11 @@ stop_probability = 0.1
 start_precipitation = 0.03
 stop_precipitation = 0.005
 rain_2h = rain_60 = rain_15 = rain_0 = False
-newmsg = 0
+try:
+    with open('data/newmsg.dat', 'r') as f:
+        newmsg = int(f.read().strip())
+except:
+    newmsg = 0
 
 caiyunData = None
 caiyunFailedCount = 0
@@ -181,6 +185,13 @@ def alert_type(str):
         return str + '(UnknownCode)'
 
 
+def update_newmsg(val):
+    global newmsg
+    newmsg = val
+    with open('data/newmsg.dat', 'w') as f:
+        f.write(str(newmsg))
+
+
 def alert_now():
 
     alerts = []
@@ -284,11 +295,11 @@ def forecast_rain(bot):
                     chat_id=group, text='未来两小时内可能会下雨。', message_id=newmsg)
             except Exception as e:
                 logger.error(e)
-                newmsg = bot.send_message(
-                    chat_id=group, text='未来两小时内可能会下雨。').message_id
+                update_newmsg(bot.send_message(
+                    chat_id=group, text='未来两小时内可能会下雨。').message_id)
         else:
-            newmsg = bot.send_message(
-                chat_id=group, text='未来两小时内可能会下雨。').message_id
+            update_newmsg(bot.send_message(
+                chat_id=group, text='未来两小时内可能会下雨。').message_id)
         logger.info('rain_2h F to T')
 
     global rain_60, rain_15, rain_0
@@ -309,8 +320,8 @@ def forecast_rain(bot):
             bot.edit_message_text(
                 chat_id=group, text=caiyunData['result']['forecast_keypoint'], message_id=newmsg)
         else:
-            newmsg = bot.send_message(
-                chat_id=group, text=caiyunData['result']['forecast_keypoint']).message_id
+            update_newmsg(bot.send_message(
+                chat_id=group, text=caiyunData['result']['forecast_keypoint']).message_id)
 
 
 def caiyun(context):
