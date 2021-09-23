@@ -7,7 +7,6 @@ group = config['BOT'].getint('group')
 channel = config['BOT'].getint('channel')
 pipe = config['BOT'].getint('pipe')
 heartbeatURL = config['BOT']['heartbeat']
-mopenid = config['BOT']['mopenid']
 webhook = config._sections['WEBHOOK']
 
 
