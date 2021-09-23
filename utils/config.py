@@ -8,6 +8,12 @@ channel = config['BOT'].getint('channel')
 pipe = config['BOT'].getint('pipe')
 heartbeatURL = config['BOT']['heartbeat']
 mopenid = config['BOT']['mopenid']
+webhook = {}
+webhook['url'] = config['WEBHOOK']['url']
+webhook['token'] = config['WEBHOOK']['token']
+webhook['port'] = config['WEBHOOK']['port']
+webhook['cert'] = config['WEBHOOK']['cert']
+webhook['key'] = config['WEBHOOK']['key']
 
 
 def update_config():

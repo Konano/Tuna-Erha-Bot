@@ -1,5 +1,5 @@
 from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
-from utils.config import config, owner, group, pipe
+from utils.config import config, owner, group, pipe, webhook
 from utils.log import logger
 from utils.mute import mute, unmute, mute_show
 from utils.caiyun import caiyun
@@ -41,8 +41,7 @@ def help(update, context):
 def main():
 
     if config['BOT'].getboolean('proxy'):
-        updater = Updater(config['BOT']['accesstoken'], use_context=True, request_kwargs={
-                          'proxy_url': config['BOT']['socks5']})
+        updater = Updater(config['BOT']['accesstoken'], use_context=True, request_kwargs={'proxy_url': config['BOT']['socks5']})
     else:
         updater = Updater(config['BOT']['accesstoken'], use_context=True)
 
@@ -65,19 +64,17 @@ def main():
     dp.add_handler(CommandHandler('echo', echo, filters=f_owner))
     dp.add_handler(CommandHandler('register', register, pass_args=True))
     dp.add_handler(CommandHandler('hitreds', hitreds))
-
     dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
+    dp.add_error_handler(error_callback)
 
     updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
     updater.job_queue.run_repeating(daily_report, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(sendHeartbeat, interval=60, first=0)
     updater.job_queue.run_daily(hitreds_init, time=datetime.time(hour=0, minute=0, tzinfo=pytz.timezone('Asia/Shanghai')))
 
-    dp.add_error_handler(error_callback)
-
+    updater.start_webhook(listen='0.0.0.0', port=webhook['port'], url_path=webhook['token'], cert=webhook['cert'], webhook_url=f'https://{webhook["url"]}:8443/{webhook["token"]}')
     logger.info('bot start')
-    updater.start_polling()
     updater.idle()
 
 
