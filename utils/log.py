@@ -38,6 +38,6 @@ logger.setLevel('NOTSET')
 logger.addHandler(fhlr)
 
 logger = logging.getLogger(__name__)
-logger.setLevel('DEBUG')
+logger.setLevel('INFO')
 logger.addHandler(chlr)
 logger.addHandler(ehlr)
