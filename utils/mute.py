@@ -2,8 +2,11 @@ import json
 from utils.log import logger
 from utils.config import config
 
-with open('data/mute.json', 'r') as file:
-    muted = json.load(file)
+try:
+    with open('data/mute.json', 'r') as file:
+        muted = json.load(file)
+except:
+    muted = []
 
 
 def mute(update, context):
