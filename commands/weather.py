@@ -7,6 +7,7 @@ import os
 import traceback
 import numpy as np
 import matplotlib
+from pathlib import Path
 matplotlib.use('Agg')
 
 
@@ -50,6 +51,7 @@ def forecast(update, context):
     pic = precipitation_graph()
     context.bot.send_photo(chat_id=update.message.chat_id, photo=open(
         pic, 'rb'), caption=cy.caiyunData['result']['forecast_keypoint'])
+    Path(pic).unlink()
 
 
 def forecast_hourly(update, context):

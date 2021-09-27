@@ -8,6 +8,7 @@ import qrcode
 from PIL import Image
 import numpy as np
 import traceback
+from pathlib import Path
 
 from utils.log import logger
 from utils.config import group
@@ -38,7 +39,7 @@ def error_callback(update, context):
 
 
 def new_message(update, context):
-    cy.update_newmsg(0)
+    cy.update_newmsg()
 
 
 emoji = '👮🚔🚨🚓'
@@ -105,6 +106,7 @@ def register(update, context):
         pic = generator_register(context.args[0], context.args[1])
         context.bot.send_photo(
             chat_id=update.message.chat_id, photo=open(pic, 'rb'))
+        Path(pic).unlink()
 
     except:
         context.bot.send_message(
