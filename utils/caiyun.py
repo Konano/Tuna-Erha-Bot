@@ -11,15 +11,28 @@ stop_probability = 0.1
 start_precipitation = 0.03
 stop_precipitation = 0.005
 rain_2h = rain_60 = rain_15 = rain_0 = False
-try:
-    with open('data/newmsg.dat', 'r') as f:
-        newmsg = int(f.read().strip())
-except:
-    newmsg = 0
 
-caiyunData = None
+try:
+    with open('data/realtime.json', 'r') as file:
+        realtime = json.load(file)
+except:
+    realtime = {'newmsg': True, 'msgid': None, 'text': None}
+    with open('data/realtime.json', 'w') as file:
+        json.dump(realtime, file)
+
+try:
+    with open('data/caiyun.json', 'r') as file:
+        caiyunData = json.load(file)
+    alerts = {}
+    if caiyunData['result']['alert']['status'] == 'ok':
+        for each in caiyunData['result']['alert']['content']:
+            if each['request_status'] == 'ok' and each['alertId'] not in alerts:
+                alerts[each['alertId']] = each
+except:
+    caiyunData = None
+    alerts = {}
+
 caiyunFailedCount = 0
-alerts = {}
 
 
 def deal_precipitation(str):
@@ -185,11 +198,11 @@ def alert_type(str):
         return str + '(UnknownCode)'
 
 
-def update_newmsg(val):
-    global newmsg
-    newmsg = val
-    with open('data/newmsg.dat', 'w') as f:
-        f.write(str(newmsg))
+def update_newmsg():
+    global realtime
+    realtime['newmsg'] = True
+    with open('data/realtime.json', 'w') as file:
+        json.dump(realtime, file)
 
 
 def alert_now():
@@ -277,9 +290,26 @@ def daily_weather(dayornight):
             ('现挂预警信号：{}\n'.format(' '.join(alert_now())) if alert_now() != [] else '')
 
 
+def realtime_report(bot, text):
+    try:
+        global realtime
+        if realtime['newmsg']:
+            realtime['text'] = text
+            realtime['msgid'] = bot.send_message(chat_id=group, text=text).message_id
+            realtime['newmsg'] = False
+        elif realtime['text'] != text:
+            realtime['text'] = text
+            bot.edit_message_text(chat_id=group, text=text,
+                                message_id=realtime['msgid'])
+        with open('data/realtime.json', 'w') as file:
+            json.dump(realtime, file)
+    except Exception as e:
+        logger.debug(traceback.format_exc())
+        logger.error(e)
+
+
 def forecast_rain(bot):
 
-    global newmsg
     assert caiyunData['result']['minutely']['status'] == 'ok'
 
     probability_2h = caiyunData['result']['minutely']['probability']
@@ -289,17 +319,7 @@ def forecast_rain(bot):
         logger.info('rain_2h T to F')
     if max(probability_2h) > start_probability and rain_2h == False:
         rain_2h = True
-        if newmsg > 0:
-            try:
-                bot.edit_message_text(
-                    chat_id=group, text='未来两小时内可能会下雨。', message_id=newmsg)
-            except Exception as e:
-                logger.error(e)
-                update_newmsg(bot.send_message(
-                    chat_id=group, text='未来两小时内可能会下雨。').message_id)
-        else:
-            update_newmsg(bot.send_message(
-                chat_id=group, text='未来两小时内可能会下雨。').message_id)
+        realtime_report(bot, '未来两小时内可能会下雨。')
         logger.info('rain_2h F to T')
 
     global rain_60, rain_15, rain_0
@@ -316,12 +336,7 @@ def forecast_rain(bot):
         changed = True
 
     if changed:
-        if newmsg > 0:
-            bot.edit_message_text(
-                chat_id=group, text=caiyunData['result']['forecast_keypoint'], message_id=newmsg)
-        else:
-            update_newmsg(bot.send_message(
-                chat_id=group, text=caiyunData['result']['forecast_keypoint']).message_id)
+        realtime_report(bot, caiyunData['result']['forecast_keypoint'])
 
 
 def caiyun(context):
