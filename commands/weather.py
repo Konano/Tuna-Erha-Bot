@@ -34,9 +34,11 @@ def precipitation_graph():
 
         plt.title('precipitation in 2 hours')
         plt.savefig(pic)
-    except:
+        plt.close('all')
+    except Exception as e:
         logger.debug(traceback.format_exc())
         logger.debug(cy.caiyunData)
+        logger.error(e)
 
     return pic
 
