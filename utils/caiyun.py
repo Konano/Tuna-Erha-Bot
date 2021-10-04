@@ -294,6 +294,7 @@ def realtime_report(bot, text):
     try:
         global realtime
         if realtime['newmsg']:
+            bot.delete_message(chat_id=group, message_id=realtime['msgid'])
             realtime['text'] = text
             realtime['msgid'] = bot.send_message(chat_id=group, text=text).message_id
             realtime['newmsg'] = False

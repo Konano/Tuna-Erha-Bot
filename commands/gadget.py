@@ -12,8 +12,8 @@ from pathlib import Path
 
 from utils.log import logger
 from utils.config import group, hitred_aim
+from utils.pool import add_pool
 import utils.caiyun as cy
-import utils.connect as ct
 
 
 def roll(update, context):
@@ -128,7 +128,8 @@ def hitreds(update, context):
     if update.message.chat_id not in hitchatid.keys():
         hitchatid[update.message.chat_id] = 0
     try:
-        context.bot.send_message(update.message.chat_id, f'打红人计数器 ({hitcount}/{hitred_aim})', reply_to_message_id=update.message.message_id)
+        msg = context.bot.send_message(update.message.chat_id, f'打红人计数器 ({hitcount}/{hitred_aim})', reply_to_message_id=update.message.message_id)
+        add_pool(msg)
         hitchatid[update.message.chat_id] += 1
         json.dump([hitcount, hitchatid], open('data/hitred.json', 'w'))
     except Exception as e:

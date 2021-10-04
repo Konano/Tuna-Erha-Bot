@@ -1,6 +1,7 @@
 import utils.caiyun as cy
 from utils.caiyun import deal_skycon, wind_direction, deal_precipitation, level_windspeed, alert_now
 from utils.log import logger
+from utils.pool import add_pool
 import matplotlib.pyplot as plt
 import time
 import os
@@ -49,8 +50,9 @@ def forecast(update, context):
     logger.info('\\forecast {}'.format(update.message.chat_id))
 
     pic = precipitation_graph()
-    context.bot.send_photo(chat_id=update.message.chat_id, photo=open(
+    msg = context.bot.send_photo(chat_id=update.message.chat_id, photo=open(
         pic, 'rb'), caption=cy.caiyunData['result']['forecast_keypoint'])
+    add_pool(msg)
     Path(pic).unlink()
 
 

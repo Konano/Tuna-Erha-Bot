@@ -3,6 +3,7 @@ from utils.config import config, owner, group, pipe, webhook
 from utils.log import logger
 from utils.mute import mute, unmute, mute_show
 from utils.caiyun import caiyun
+from utils.pool import auto_delete
 from commands.daily import daily_report
 from commands.washer import washer
 from commands.info import info
@@ -14,8 +15,6 @@ import datetime, pytz
 def help(update, context):
     logger.info('\\help')
     text = '''
-可用：
-
 /weather - 显示当前位置的天气（彩云）
 /forecast - 降雨分钟级预报
 /forecast_hourly - 天气小时级预报
@@ -26,14 +25,8 @@ def help(update, context):
 /callpolice - 在线报警
 /washer - 洗衣机在线状态
 /register - 一键注册防止失学
+/hitreds - 一键打红人
 /help - 可用指令说明
-
-废弃：
-
-/libseat - 查看文图座位剩余情况
-/weather_thu - 显示学校区域当前的天气（学校天气站）
-/weather_today - 显示当前位置的今日天气预报（彩云）
-/status - Bot 连接状态
 '''
     context.bot.send_message(update.message.chat_id, text)
 
@@ -71,6 +64,7 @@ def main():
     updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
     updater.job_queue.run_repeating(daily_report, interval=10, first=0, context=group)
     updater.job_queue.run_repeating(sendHeartbeat, interval=60, first=0)
+    updater.job_queue.run_repeating(auto_delete, interval=60, first=30)
     updater.job_queue.run_daily(hitreds_init, time=datetime.time(hour=0, minute=0, tzinfo=pytz.timezone('Asia/Shanghai')))
 
     updater.start_webhook(listen=webhook['listen'], port=webhook['port'], url_path=webhook['token'], cert=webhook['cert'], webhook_url=f'https://{webhook["url"]}:8443/{webhook["port"]}/{webhook["token"]}')
