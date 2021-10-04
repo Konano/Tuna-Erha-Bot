@@ -128,7 +128,8 @@ def hitreds(update, context):
     if update.message.chat_id not in hitchatid.keys():
         hitchatid[update.message.chat_id] = 0
     try:
-        msg = context.bot.send_message(update.message.chat_id, f'打红人计数器 ({hitcount}/{hitred_aim})', reply_to_message_id=update.message.message_id)
+        msg = context.bot.send_message(
+            update.message.chat_id, f'打红人计数器 ({hitcount}/{hitred_aim})', reply_to_message_id=update.message.message_id)
         add_pool(msg)
         hitchatid[update.message.chat_id] += 1
         json.dump([hitcount, hitchatid], open('data/hitred.json', 'w'))
@@ -146,11 +147,12 @@ def hitreds_init(context):
     today_hitcount = 0
     for x in __hitchatid.keys():
         today_hitcount += __hitchatid[x]
-    
+
     for chatid in __hitchatid.keys():
         group_or_chat = '本群' if chatid < 0 else '您'
         try:
-            context.bot.send_message(chatid, f'红人昨日被打次数: {today_hitcount}\n{group_or_chat}昨日打红人次数: {__hitchatid[chatid]}\n红人 @ZenithalH 万分感谢您的支持！')
+            context.bot.send_message(
+                chatid, f'红人昨日被打次数: {today_hitcount}\n{group_or_chat}昨日打红人次数: {__hitchatid[chatid]}\n红人 @ZenithalH 万分感谢您的支持！')
         except Exception as e:
             logger.debug(traceback.format_exc())
             logger.error(e)

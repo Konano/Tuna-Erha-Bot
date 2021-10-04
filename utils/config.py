@@ -16,9 +16,6 @@ def update_config():
         config.write(configFile)
 
 
-connectTimeLimit = 10
-
-
 class InvalidParameter(Exception):
     """Invalid Parameter"""
 

@@ -7,15 +7,14 @@ import commands.info as info
 preHour = time.localtime().tm_hour
 
 
-def daily_report(context):
+def daily_report(context): # TODO
 
     global preHour
     hour = time.localtime().tm_hour
     if preHour != hour:
         preHour = hour
         if hour == 6 or hour == 18:
-            text = daily_weather('day' if hour == 6 else 'night') + \
-                '当前状态：' + ('正常' if ct.connectStatus else '异常')
+            text = daily_weather('day' if hour == 6 else 'night')
             context.bot.send_message(chat_id=group,   text=text)
             context.bot.send_message(chat_id=channel, text=text)
         elif hour == 23:

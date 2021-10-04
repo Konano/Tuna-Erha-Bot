@@ -1,6 +1,5 @@
 import json
 from utils.log import logger
-from utils.config import config
 
 try:
     with open('data/mute.json', 'r') as file:

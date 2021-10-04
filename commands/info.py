@@ -14,7 +14,7 @@ sended_news = {}
 urls = {}
 
 
-def info(update, context):
+def info(update, context): # TODO
 
     try:
         rev = json.loads(update.channel_post.text)
