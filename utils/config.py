@@ -8,6 +8,7 @@ channel = config['BOT'].getint('channel')
 pipe = config['BOT'].getint('pipe')
 heartbeatURL = config['BOT']['heartbeat']
 webhook = config._sections['WEBHOOK']
+hitred_aim = config['GADGET'].getint('hitred_aim')
 
 
 def update_config():
