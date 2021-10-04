@@ -2,7 +2,6 @@ import time
 from utils.caiyun import daily_weather
 from utils.config import group, channel
 from utils.format import escaped
-import utils.connect as ct
 import commands.info as info
 
 preHour = time.localtime().tm_hour
