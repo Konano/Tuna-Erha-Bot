@@ -5,6 +5,8 @@ from utils.config import group
 try:
     with open('data/msgpool.json', 'r') as file:
         msg_pool = json.load(file)
+    for x in msg_pool:
+        x[0] = datetime.fromisoformat(x[0])
 except:
     msg_pool = []
 
@@ -25,4 +27,4 @@ def auto_delete(context):
             break
     msg_pool = msg_pool[tot:]
     with open('data/msgpool.json', 'w') as file:
-        json.dump(msg_pool, file)
+        json.dump(msg_pool, file, default=str)
