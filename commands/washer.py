@@ -2,6 +2,7 @@ import requests
 import json
 
 from utils.log import logger
+from utils.pool import add_pool
 
 
 def washer_status(obj):
@@ -39,5 +40,6 @@ def washer(update, context):
         update.message.chat_id, 'checking...', reply_to_message_id=update.message.message_id)
     text = get_washer(args)
     context.bot.delete_message(update.message.chat_id, msg.message_id)
-    context.bot.send_message(update.message.chat_id, text,
-                             reply_to_message_id=update.message.message_id)
+    msg = context.bot.send_message(update.message.chat_id, text,
+                                   reply_to_message_id=update.message.message_id)
+    add_pool(msg)
