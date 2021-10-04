@@ -4,7 +4,7 @@ import traceback
 from utils.log import logger
 from utils.config import config, owner, group, channel
 from utils.format import escaped
-import utils.crawler as crawler
+from utils.crawler import request
 
 start_probability = 0.8
 stop_probability = 0.1
@@ -344,8 +344,8 @@ def caiyun(context):
 
     global caiyunData, caiyunFailedCount
     try:
-        caiyunData = json.loads(crawler.request('https://api.caiyunapp.com/v2.5/{}/{},{}/weather.json?lang=zh_CN&alert=true'
-                                                .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
+        caiyunData = json.loads(request('https://api.caiyunapp.com/v2.5/{}/{},{}/weather.json?lang=zh_CN&alert=true'
+                                        .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
 
         assert caiyunData['status'] == 'ok'
 

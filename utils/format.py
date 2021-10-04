@@ -1,7 +1,5 @@
 import re
 
-# MarkdownV2 Mode
 
-
-def escaped(str):
+def escaped(str):  # MarkdownV2 Mode
     return re.sub(r'([\_\*\[\]\(\)\~\`\>\#\+\-\=\|\{\}\.\!])', '\\\\\\1', str)
