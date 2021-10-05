@@ -36,12 +36,13 @@ def help(update, context):
 def main():
 
     updater = Updater(config['BOT']['accesstoken'], use_context=True)
+    dp = updater.dispatcher
+    jq = updater.job_queue
 
     f_owner = Filters.chat(owner)
     f_group = Filters.chat(group)
     f_pipe = Filters.chat(pipe)
 
-    dp = updater.dispatcher
     dp.add_handler(CommandHandler('mute', mute, pass_args=True, filters=(f_owner | f_group)))
     dp.add_handler(CommandHandler('unmute', unmute,pass_args=True, filters=(f_owner | f_group)))
     dp.add_handler(CommandHandler('mute_list', mute_show, filters=(f_owner | f_group)))
@@ -59,7 +60,6 @@ def main():
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
     dp.add_error_handler(error_callback)
 
-    jq = updater.job_queue
     jq.run_repeating(caiyun, interval=60, first=0)
     jq.run_repeating(sendHeartbeat, interval=60, first=0)
     jq.run_repeating(auto_delete, interval=60, first=30)
@@ -67,6 +67,8 @@ def main():
     jq.run_daily(weather_report, time=time(hour=18, tzinfo=timezone('Asia/Shanghai')), context='night')
     jq.run_daily(daily_report, time=time(hour=23, tzinfo=timezone('Asia/Shanghai')))
     jq.run_daily(hitreds_init, time=time(hour=0, tzinfo=timezone('Asia/Shanghai')))
+
+    # jq.run_daily(daily_report, time=(datetime.now()+timedelta(hours=-8, seconds=10)).time())
 
     updater.start_webhook(listen=webhook['listen'], port=webhook['port'], url_path=webhook['token'], cert=webhook['cert'], webhook_url=f'https://{webhook["url"]}:8443/{webhook["port"]}/{webhook["token"]}')
     logger.info('bot start')
