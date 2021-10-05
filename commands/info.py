@@ -20,9 +20,9 @@ def info(update, context):
         rev = json.loads(update.channel_post.text)
         logger.info(rev)
         data = rev['data']
-        url = data['url']
 
         if rev['type'] == 'newinfo':
+            url = data['url']
             today[url] = data
             today[url]['msgid'] = None
             if data['source'] not in mt.muted:
@@ -33,6 +33,7 @@ def info(update, context):
                 today[url]['msgid'] = msg.message_id
 
         elif rev['type'] == 'delinfo':
+            url = data
             if url in today.keys():
                 if today[url]['msgid'] is not None:
                     context.bot.delete_message(
