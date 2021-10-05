@@ -1,15 +1,17 @@
+
+import os
+import time
+import traceback
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from pathlib import Path
+matplotlib.use('Agg')
+
 import utils.caiyun as cy
 from utils.caiyun import deal_skycon, wind_direction, deal_precipitation, level_windspeed, alert_now
 from utils.log import logger
 from utils.pool import add_pool
-import matplotlib.pyplot as plt
-import time
-import os
-import traceback
-import numpy as np
-import matplotlib
-from pathlib import Path
-matplotlib.use('Agg')
 
 
 def precipitation_graph():

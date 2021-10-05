@@ -1,7 +1,10 @@
 import configparser
 
+config_file = 'config.ini'
+# config_file = 'config-dev.ini'
+
 config = configparser.RawConfigParser()
-config.read('config.ini')
+config.read(config_file)
 owner = config['BOT'].getint('owner')
 group = config['BOT'].getint('group')
 channel = config['BOT'].getint('channel')
@@ -12,17 +15,5 @@ hitred_aim = config['GADGET'].getint('hitred_aim')
 
 
 def update_config():
-    with open('config.ini', 'w') as configFile:
+    with open(config_file, 'w') as configFile:
         config.write(configFile)
-
-
-class InvalidParameter(Exception):
-    """Invalid Parameter"""
-
-
-class ConnectError(Exception):
-    """Connect Error"""
-
-
-class ConnectTimeout(Exception):
-    """Connect Timeout"""

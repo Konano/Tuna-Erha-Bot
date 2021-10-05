@@ -1,16 +1,18 @@
 from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
+from datetime import datetime, time, timedelta
+from pytz import timezone
+
 from utils.config import config, owner, group, pipe, webhook
 from utils.log import logger
 from utils.mute import mute, unmute, mute_show
 from utils.caiyun import caiyun
 from utils.pool import auto_delete
-from commands.daily import daily_report
+from commands.daily import daily_report, weather_report
 from commands.washer import washer
 from commands.info import info
 from commands.gadget import echo, roll, callpolice, new_message, error_callback, register, hitreds, hitreds_init
 from commands.weather import forecast, forecast_hourly, weather
 from commands.heartbeat import sendHeartbeat
-import datetime, pytz
 
 def help(update, context):
     logger.info('\\help')
@@ -33,17 +35,13 @@ def help(update, context):
 
 def main():
 
-    if config['BOT'].getboolean('proxy'):
-        updater = Updater(config['BOT']['accesstoken'], use_context=True, request_kwargs={'proxy_url': config['BOT']['socks5']})
-    else:
-        updater = Updater(config['BOT']['accesstoken'], use_context=True)
-
-    dp = updater.dispatcher
+    updater = Updater(config['BOT']['accesstoken'], use_context=True)
 
     f_owner = Filters.chat(owner)
     f_group = Filters.chat(group)
     f_pipe = Filters.chat(pipe)
 
+    dp = updater.dispatcher
     dp.add_handler(CommandHandler('mute', mute, pass_args=True, filters=(f_owner | f_group)))
     dp.add_handler(CommandHandler('unmute', unmute,pass_args=True, filters=(f_owner | f_group)))
     dp.add_handler(CommandHandler('mute_list', mute_show, filters=(f_owner | f_group)))
@@ -61,11 +59,14 @@ def main():
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
     dp.add_error_handler(error_callback)
 
-    updater.job_queue.run_repeating(caiyun, interval=60, first=0, context=group)
-    updater.job_queue.run_repeating(daily_report, interval=10, first=0, context=group)
-    updater.job_queue.run_repeating(sendHeartbeat, interval=60, first=0)
-    updater.job_queue.run_repeating(auto_delete, interval=60, first=30)
-    updater.job_queue.run_daily(hitreds_init, time=datetime.time(hour=0, minute=0, tzinfo=pytz.timezone('Asia/Shanghai')))
+    jq = updater.job_queue
+    jq.run_repeating(caiyun, interval=60, first=0)
+    jq.run_repeating(sendHeartbeat, interval=60, first=0)
+    jq.run_repeating(auto_delete, interval=60, first=30)
+    jq.run_daily(weather_report, time=time(hour=6, tzinfo=timezone('Asia/Shanghai')), context='day')
+    jq.run_daily(weather_report, time=time(hour=18, tzinfo=timezone('Asia/Shanghai')), context='night')
+    jq.run_daily(daily_report, time=time(hour=23, tzinfo=timezone('Asia/Shanghai')))
+    jq.run_daily(hitreds_init, time=time(hour=0, tzinfo=timezone('Asia/Shanghai')))
 
     updater.start_webhook(listen=webhook['listen'], port=webhook['port'], url_path=webhook['token'], cert=webhook['cert'], webhook_url=f'https://{webhook["url"]}:8443/{webhook["port"]}/{webhook["token"]}')
     logger.info('bot start')
