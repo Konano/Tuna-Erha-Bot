@@ -22,7 +22,11 @@ def auto_delete(context):
     for x in msg_pool:
         if x[0] < datetime.now(x[0].tzinfo) - timedelta(days=1):
             tot += 1
-            context.bot.delete_message(x[1], x[2])
+            try:
+                context.bot.delete_message(chat_id=x[1], message_id=x[2])
+            except Exception as e:
+                if str(e) != 'Message to delete not found':
+                    raise e
         else:
             break
     msg_pool = msg_pool[tot:]

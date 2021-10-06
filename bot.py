@@ -39,6 +39,8 @@ def main():
     dp = updater.dispatcher
     jq = updater.job_queue
 
+    dp.add_error_handler(error_callback)
+
     f_owner = Filters.chat(owner)
     f_group = Filters.chat(group)
     f_pipe = Filters.chat(pipe)
@@ -58,7 +60,6 @@ def main():
     dp.add_handler(CommandHandler('hitreds', hitreds))
     dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
-    dp.add_error_handler(error_callback)
 
     jq.run_repeating(caiyun, interval=60, first=0)
     jq.run_repeating(sendHeartbeat, interval=60, first=0)
