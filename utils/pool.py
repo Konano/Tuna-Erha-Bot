@@ -1,6 +1,9 @@
 import json
+import traceback
 from datetime import datetime, timedelta
+
 from utils.config import group
+from utils.log import logger
 
 try:
     with open('data/msgpool.json', 'r') as file:
@@ -25,8 +28,8 @@ def auto_delete(context):
             try:
                 context.bot.delete_message(chat_id=x[1], message_id=x[2])
             except Exception as e:
-                if str(e) != 'Message to delete not found':
-                    raise e
+                logger.warning(traceback.format_exc())
+                pass
         else:
             break
     msg_pool = msg_pool[tot:]
