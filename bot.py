@@ -69,7 +69,7 @@ def main():
     dp.add_handler(CommandHandler('fan', fan, filters=f_group))
     dp.add_handler(CommandHandler('san', san, filters=f_group))
     dp.add_handler(CommandHandler('payme', payme, filters=f_group))
-    dp.add_handler(MessageHandler(Filters.photo, payme_upload))
+    dp.add_handler(MessageHandler(Filters.chat() & Filters.photo, payme_upload))
     dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
 

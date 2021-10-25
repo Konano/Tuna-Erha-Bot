@@ -217,9 +217,11 @@ def payme_upload(update, context) -> None:
                 update.message.reply_text('检测到：UnionPay 收款码')
                 return
             else:
-                raise Exception(url)
+                update.message.reply_text('Unsupported QRCode')
+                logger.warning(url)
+                return
     except Exception as e:
-        update.message.reply_text('qrcode not found')
+        update.message.reply_text('QRCode not found')
         logger.warning(e)
 
 
@@ -228,7 +230,7 @@ def payme(update, context) -> None:
     user_id = update.message.from_user.id
     folder = Path(f'pic/pay/{user_id}')
     if not (folder.exists() and len(list(folder.iterdir()))):
-        update.message.reply_text('No qrcodes found, send to me first!')
+        update.message.reply_text('No QRCodes found, send to me first!')
         return
     images = [InputMediaPhoto(file.open('rb')) for file in folder.iterdir()]
     update.message.reply_media_group(images)
