@@ -11,6 +11,7 @@ from commands.daily import daily_report, weather_report
 from commands.washer import washer
 from commands.info import info
 from commands.gadget import echo, roll, callpolice, new_message, error_callback, register, hitreds, hitreds_init
+from commands.gadget import yue, gu, fan, san, payme, payme_upload
 from commands.weather import forecast, forecast_hourly, weather
 from commands.heartbeat import sendHeartbeat
 
@@ -28,6 +29,11 @@ def help(update, context):
 /washer - 洗衣机在线状态
 /register - 一键注册防止失学
 /hitreds - 一键打红人
+/payme - 显示你的收款码
+/fan - 发起约饭
+/yue - 约~
+/unyue - 不约~
+/san - 饭饱散伙
 /help - 可用指令说明
 '''
     context.bot.send_message(update.message.chat_id, text)
@@ -58,6 +64,12 @@ def main():
     dp.add_handler(CommandHandler('echo', echo, filters=f_owner))
     dp.add_handler(CommandHandler('register', register, pass_args=True))
     dp.add_handler(CommandHandler('hitreds', hitreds))
+    dp.add_handler(CommandHandler('yue', yue, filters=f_group))
+    dp.add_handler(CommandHandler('gu', gu, filters=f_group))
+    dp.add_handler(CommandHandler('fan', fan, filters=f_group))
+    dp.add_handler(CommandHandler('san', san, filters=f_group))
+    dp.add_handler(CommandHandler('payme', payme, filters=f_group))
+    dp.add_handler(MessageHandler(Filters.photo, payme_upload))
     dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
 

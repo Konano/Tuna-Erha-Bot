@@ -9,11 +9,15 @@ from PIL import Image
 import numpy as np
 import traceback
 from pathlib import Path
+import io
+from pyzbar.pyzbar import decode
+from telegram import InputMediaPhoto
 
+import utils.caiyun as cy
 from utils.log import logger
 from utils.config import group, hitred_aim
 from utils.pool import add_pool
-import utils.caiyun as cy
+from utils.format import escaped
 
 
 def roll(update, context):
@@ -22,11 +26,9 @@ def roll(update, context):
 
     try:
         random.seed(math.floor(time.time()))
-        context.bot.send_message(
-            update.message.chat_id, 'Choose: '+str(random.randint(1, int(context.args[0]))))
+        update.message.reply_text('Choose: '+str(random.randint(1, int(context.args[0]))))
     except:
-        context.bot.send_message(
-            update.message.chat_id, 'Usage: /roll [total]')
+        update.message.reply_text('Usage: /roll [total]')
 
 
 def echo(update, context):
@@ -156,3 +158,78 @@ def hitreds_init(context):
         except Exception as e:
             logger.debug(traceback.format_exc())
             logger.error(e)
+
+
+users = {}
+
+
+def yue(update, context) -> None:
+    user_id = update.message.from_user.id
+    user_name = update.message.from_user.name
+    users[user_id] = user_name
+    update.message.reply_text('约😘')
+
+
+def gu(update, context) -> None:
+    user_id = update.message.from_user.id
+    if user_id in users:
+        del users[user_id]
+    update.message.reply_text('不约😭')
+
+
+def fan(update, context) -> None:
+    if len(users) == 0:
+        update.message.reply_text('没人约😭')
+        return
+    info = ' '.join([f'[{escaped(user_name)}](tg://user?id={user_id})'
+                     for user_id, user_name in users.items()])
+    update.message.reply_markdown_v2(info)
+
+
+def san(update, context) -> None:
+    global users
+    users = {}
+    update.message.reply_text('散🎉')
+
+
+def payme_upload(update, context) -> None:
+
+    user_id = update.message.from_user.id
+    folder = Path(f'pic/pay/{user_id}')
+    folder.mkdir(exist_ok=True)
+    try:
+        buf = update.message.photo[-1].get_file().download_as_bytearray()
+        for res in decode(Image.open(io.BytesIO(buf))):
+            url = res.data.decode()
+            if url.startswith('https://qr.alipay.com/'):
+                with (folder / 'ali.png').open('wb') as f:
+                    f.write(buf)
+                update.message.reply_text('检测到：Alipay 收款码')
+                return
+            elif url.startswith('wxp://'):
+                with (folder / 'wx.png').open('wb') as f:
+                    f.write(buf)
+                update.message.reply_text('检测到：Wechat 收款码')
+                return
+            elif url.startswith('https://qr.95516.com/'):
+                with (folder / 'uni.png').open('wb') as f:
+                    f.write(buf)
+                update.message.reply_text('检测到：UnionPay 收款码')
+                return
+            else:
+                raise Exception(url)
+    except Exception as e:
+        update.message.reply_text('qrcode not found')
+        logger.warning(e)
+
+
+def payme(update, context) -> None:
+
+    user_id = update.message.from_user.id
+    folder = Path(f'pic/pay/{user_id}')
+    if not (folder.exists() and len(list(folder.iterdir()))):
+        update.message.reply_text('No qrcodes found, send to me first!')
+        return
+    images = [InputMediaPhoto(file.open('rb')) for file in folder.iterdir()]
+    update.message.reply_media_group(images)
+    return

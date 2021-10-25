@@ -18,6 +18,11 @@ Erha-Bot Tuna 特供版
 - /washer - 洗衣机在线状态
 - /register - 一键注册防止失学
 - /hitreds - 一键打红人
+- /payme - 显示你的收款码
+- /fan - 发起约饭
+- /yue - 约~
+- /unyue - 不约~
+- /san - 饭饱散伙
 - /help - 可用指令说明
 - /echo - 回显消息到群 (owner)
 
