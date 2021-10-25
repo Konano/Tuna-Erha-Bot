@@ -32,7 +32,7 @@ def help(update, context):
 /payme - 显示你的收款码
 /fan - 发起约饭
 /yue - 约~
-/unyue - 不约~
+/buyue - 不约~
 /san - 饭饱散伙
 /help - 可用指令说明
 '''
@@ -65,7 +65,7 @@ def main():
     dp.add_handler(CommandHandler('register', register, pass_args=True))
     dp.add_handler(CommandHandler('hitreds', hitreds))
     dp.add_handler(CommandHandler('yue', yue, filters=f_group))
-    dp.add_handler(CommandHandler('gu', gu, filters=f_group))
+    dp.add_handler(CommandHandler('buyue', gu, filters=f_group))
     dp.add_handler(CommandHandler('fan', fan, filters=f_group))
     dp.add_handler(CommandHandler('san', san, filters=f_group))
     dp.add_handler(CommandHandler('payme', payme, filters=f_group))

@@ -21,7 +21,7 @@ Erha-Bot Tuna 特供版
 - /payme - 显示你的收款码
 - /fan - 发起约饭
 - /yue - 约~
-- /unyue - 不约~
+- /buyue - 不约~
 - /san - 饭饱散伙
 - /help - 可用指令说明
 - /echo - 回显消息到群 (owner)
