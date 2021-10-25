@@ -55,7 +55,7 @@ def callpolice(update, context):
     text = ''
     for _ in range(random.randint(10, 100)):
         text += emoji[random.randint(0, 3)]
-    context.bot.send_message(chat_id=update.message.chat_id, text=text)
+    update.effective_chat.send_message(text)
 
 
 dig = np.array([
@@ -97,22 +97,22 @@ def generator_register(id, tm):
 
 def register(update, context):
 
+    args = context.args
+
     logger.info(
-        f'\\register {update.message.chat_id} {json.dumps(context.args)}')
+        f'\\register {update.message.chat_id} {json.dumps(args)}')
 
     try:
-        assert len(context.args) == 2
-        assert len(re.findall(r'^\d{10}$', context.args[0])) == 1
-        assert len(re.findall(r'^\d{6}$', context.args[1])) == 1
+        assert len(args) == 2
+        assert len(re.findall(r'^\d{10}$', args[0])) == 1
+        assert len(re.findall(r'^\d{6}$', args[1])) == 1
 
-        pic = generator_register(context.args[0], context.args[1])
-        context.bot.send_photo(
-            chat_id=update.message.chat_id, photo=open(pic, 'rb'))
+        pic = generator_register(args[0], args[1])
+        update.message.reply_photo(open(pic, 'rb'))
         Path(pic).unlink()
 
     except:
-        context.bot.send_message(
-            update.message.chat_id, 'Usage: /register [StudentID] [Month]\nExample: /register 1994990239 202102')
+        update.message.reply_text('Usage: /register [StudentID] [Month]\nExample: /register 1994990239 202102')
 
 
 try:
@@ -130,8 +130,7 @@ def hitreds(update, context):
     if update.message.chat_id not in hitchatid.keys():
         hitchatid[update.message.chat_id] = 0
     try:
-        msg = context.bot.send_message(
-            update.message.chat_id, f'打红人计数器 ({hitcount}/{hitred_aim})', reply_to_message_id=update.message.message_id)
+        msg = update.message.reply_text(f'打红人计数器 ({hitcount}/{hitred_aim})')
         add_pool(msg)
         hitchatid[update.message.chat_id] += 1
         json.dump([hitcount, hitchatid], open('data/hitred.json', 'w'))
