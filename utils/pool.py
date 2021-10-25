@@ -28,7 +28,8 @@ def auto_delete(context):
             try:
                 context.bot.delete_message(chat_id=x[1], message_id=x[2])
             except Exception as e:
-                logger.warning(traceback.format_exc())
+                if 'Message to delete not found' not in str(e):
+                    logger.warning(traceback.format_exc())
                 pass
         else:
             break
