@@ -1,5 +1,6 @@
 import json
 import traceback
+from telegram.error import BadRequest
 
 from utils.log import logger
 from utils.config import config, owner, group, channel
@@ -294,7 +295,10 @@ def realtime_report(bot, text):
     try:
         global realtime
         if realtime['newmsg']:
-            bot.delete_message(chat_id=group, message_id=realtime['msgid'])
+            try:
+                bot.delete_message(chat_id=group, message_id=realtime['msgid'])
+            except BadRequest as e:
+                logger.debug(e)
             realtime['text'] = text
             realtime['msgid'] = bot.send_message(chat_id=group, text=text).message_id
             realtime['newmsg'] = False
