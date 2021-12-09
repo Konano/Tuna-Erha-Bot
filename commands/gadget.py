@@ -15,7 +15,7 @@ from telegram import InputMediaPhoto
 
 import utils.caiyun as cy
 from utils.log import logger
-from utils.config import group, hitred_aim
+from utils.config import group
 from utils.pool import add_pool
 from utils.format import escaped
 
@@ -124,13 +124,21 @@ except Exception as e:
     hitcount, hitchatid = 0, {}
 
 
+def hitred_aim():
+    global hitcount
+    aim = 1
+    while aim <= hitcount:
+        aim *= 2
+    return aim
+
+
 def hitreds(update, context):
     global hitcount, hitchatid
     hitcount += 1
     if update.message.chat_id not in hitchatid.keys():
         hitchatid[update.message.chat_id] = 0
     try:
-        msg = update.message.reply_text(f'打红人计数器 ({hitcount}/{hitred_aim})')
+        msg = update.message.reply_text(f'打红人计数器 ({hitcount}/{hitred_aim()})')
         add_pool(msg)
         hitchatid[update.message.chat_id] += 1
         json.dump([hitcount, hitchatid], open('data/hitred.json', 'w'))
