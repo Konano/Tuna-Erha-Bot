@@ -360,8 +360,9 @@ def caiyun(context):
 
     except:
         logger.debug(traceback.format_exc())
-        logger.warning(f'Failed to get data from CaiYun. ({caiyunFailedCount})')
         caiyunFailedCount += 1
+        if caiyunFailedCount == 1 or caiyunFailedCount % 5 == 0:
+            logger.warning(f'Failed to get data from CaiYun. ({caiyunFailedCount})')
         return
 
     forecast_rain(context.bot)
