@@ -360,11 +360,8 @@ def caiyun(context):
 
     except:
         logger.debug(traceback.format_exc())
-        logger.warning('Failed to get data from CaiYun.')
+        logger.warning(f'Failed to get data from CaiYun. ({caiyunFailedCount})')
         caiyunFailedCount += 1
-        if caiyunFailedCount == 5:
-            context.bot.send_message(
-                chat_id=owner, text='Failed to get data from CaiYun 5 times.')
         return
 
     forecast_rain(context.bot)
