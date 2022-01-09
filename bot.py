@@ -64,6 +64,7 @@ def main():
     dp.add_handler(CommandHandler('echo', echo, filters=f_owner))
     dp.add_handler(CommandHandler('register', register, pass_args=True))
     dp.add_handler(CommandHandler('hitreds', hitreds))
+    dp.add_handler(CommandHandler('spankreds', hitreds))
     dp.add_handler(CommandHandler('yue', yue, filters=f_group))
     dp.add_handler(CommandHandler('buyue', gu, filters=f_group))
     dp.add_handler(CommandHandler('fan', fan, filters=f_group))
