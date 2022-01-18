@@ -15,27 +15,33 @@ from commands.gadget import yue, gu, fan, san, payme, payme_upload
 from commands.weather import forecast, forecast_hourly, weather
 from commands.heartbeat import sendHeartbeat
 
+
 def help(update, context):  # TODO 增加 group 区分
     logger.info('\\help')
-    text = '''
-/weather - 显示当前位置的天气（彩云）
-/forecast - 降雨分钟级预报
-/forecast_hourly - 天气小时级预报
-/mute - 屏蔽发布源
-/unmute - 解除屏蔽发布源
-/mute_list - 列出所有被屏蔽的发布源
-/roll - 从 1 开始的随机数
-/callpolice - 在线报警
-/washer - 洗衣机在线状态
-/register - 一键注册防止失学
-/hitreds - 一键打红人
-/payme - 显示你的收款码
-/fan - 发起约饭
-/yue - 约~
-/buyue - 不约~
-/san - 饭饱散伙
-/help - 可用指令说明
-'''
+    commands = [
+        ['weather', '清华目前的天气', True],
+        ['forecast', '清华降雨分钟级预报', True],
+        ['forecast_hourly', '清华天气小时级预报', True],
+        ['mute', '屏蔽发布源', False],
+        ['unmute', '解除屏蔽发布源', False],
+        ['mute_list', '列出所有被屏蔽的发布源', False],
+        ['roll', '从 1 开始的随机数', True],
+        ['callpolice', '在线报警', True],
+        ['washer', '洗衣机在线状态', True],
+        ['register', '一键注册防止失学', True],
+        ['hitreds', '一键打红人', True],
+        ['spankreds', '给红人来一巴掌', True],
+        ['payme', '显示你的收款码', False],
+        ['fan', '发起约饭', False],
+        ['yue', '约~', False],
+        ['buyue', '不约~', False],
+        ['san', '饭饱散伙', False],
+        ['help', '可用指令说明', True],
+    ]
+    if update.message.chat_id == group:
+        text = '\n'.join([f'/{x[0]} - {x[1]}' for x in commands])
+    else:
+        text = '\n'.join([f'/{x[0]} - {x[1]}' for x in filter(lambda x:x[-1], commands)])
     context.bot.send_message(update.message.chat_id, text)
 
 
