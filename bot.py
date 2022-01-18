@@ -15,7 +15,7 @@ from commands.gadget import yue, gu, fan, san, payme, payme_upload
 from commands.weather import forecast, forecast_hourly, weather
 from commands.heartbeat import sendHeartbeat
 
-def help(update, context):
+def help(update, context):  # TODO 增加 group 区分
     logger.info('\\help')
     text = '''
 /weather - 显示当前位置的天气（彩云）
@@ -51,9 +51,9 @@ def main():
     f_group = Filters.chat(group)
     f_pipe = Filters.chat(pipe)
 
-    dp.add_handler(CommandHandler('mute', mute, pass_args=True, filters=(f_owner | f_group)))
-    dp.add_handler(CommandHandler('unmute', unmute,pass_args=True, filters=(f_owner | f_group)))
-    dp.add_handler(CommandHandler('mute_list', mute_show, filters=(f_owner | f_group)))
+    dp.add_handler(CommandHandler('mute', mute, pass_args=True, filters=(f_owner | f_group)))  # TODO 增加 source 和 keyword
+    dp.add_handler(CommandHandler('unmute', unmute, pass_args=True, filters=(f_owner | f_group)))  # TODO 增加 source 和 keyword
+    dp.add_handler(CommandHandler('mute_list', mute_show, filters=(f_owner | f_group)))  # TODO mute 列表
     dp.add_handler(CommandHandler('forecast', forecast))
     dp.add_handler(CommandHandler('forecast_hourly', forecast_hourly))
     dp.add_handler(CommandHandler('weather', weather))
