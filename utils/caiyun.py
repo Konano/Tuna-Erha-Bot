@@ -348,7 +348,7 @@ def caiyun(context):
 
     global caiyunData, caiyunFailedCount
     try:
-        caiyunData = json.loads(request('https://api.caiyunapp.com/v2.5/{}/{},{}/weather.json?lang=zh_CN&alert=true'
+        caiyunData = json.loads(request('https://api.caiyunapp.com/v2.6/{}/{},{}/weather.json?lang=zh_CN&alert=true'
                                         .format(config['CAIYUN']['token'], config['CAIYUN']['longitude'], config['CAIYUN']['latitude'])))
 
         assert caiyunData['status'] == 'ok'

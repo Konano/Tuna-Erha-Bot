@@ -80,7 +80,7 @@ def main():
     dp.add_handler(MessageHandler(f_group & Filters.text, new_message))
     dp.add_handler(MessageHandler(f_pipe & Filters.update.channel_post, info))
 
-    jq.run_repeating(caiyun, interval=60, first=0)
+    jq.run_repeating(caiyun, interval=60*5, first=0)
     jq.run_repeating(sendHeartbeat, interval=60, first=0)
     jq.run_repeating(auto_delete, interval=60, first=30)
     jq.run_daily(weather_report, time=time(hour=6, tzinfo=timezone('Asia/Shanghai')), context='day')
