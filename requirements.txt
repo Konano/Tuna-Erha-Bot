@@ -1,5 +1,5 @@
 requests==2.26.0
-numpy==1.21.2
+numpy==1.22.0
 python_telegram_bot==13.7
 matplotlib==3.4.3
 beautifulsoup4==4.10.0
